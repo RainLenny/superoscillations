@@ -1,15 +1,14 @@
 syms t w
-
+% redefine the signals so that the fourier will work
 % Define parameters
 angular_freqs = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65];
-scaling_factor = 1;
-angular_freqs = angular_freqs * scaling_factor;
 input_amps = [17.551969178838473, -49.93615200929133, 48.91892825922387, -7.222327926051708, -17.23049063370233, 8.876842152413422];
 
 % Define signals
 superoscillations_signal = sum(input_amps .* exp(1i * angular_freqs * t));
-sinc_signal = sinc(t * scaling_factor / pi);
-filter_signal = sinc(t * 0.7 * scaling_factor / pi) * 0.7 / pi;
+sinc_signal = sinc(t / pi);
+% filter_signal = sinc(t * 0.7 / pi) * 0.7 / pi;
+filter_signal = (1 / 0.7) * sinc(t  / 0.7);
 
 % Compute Fourier transforms
 FT_superoscillations = fourier(superoscillations_signal, t, w);

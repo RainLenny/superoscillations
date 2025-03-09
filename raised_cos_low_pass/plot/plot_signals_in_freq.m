@@ -1,3 +1,5 @@
+clear all
+
 superoscilation = ones(1,6);
 w_axis_superoscilation = [0.4,0.45,0.5,0.55,0.6,0.65];
 
@@ -7,14 +9,26 @@ w_axis = -2:d_omega:2;
 sinc_signal = (w_axis >= -1) & (w_axis <= 1);  % Define sinc signal
 sinc_signal = pi*sinc_signal;
 
-filter_signal = (w_axis >= -0.7) & (w_axis <= 0.7); 
+%% Filter
+a = 0.65;
+b = 0.85;
+beta = (b-a)/(b+a);
+T = 2*pi/(b+a);
 
-%Windowing of the filter in freq domain is:
-window_in_freq = (pi / 0.1) * sinc(t * pi / 0.1);
+% Compute limits
+w1 = (1 - beta) * pi / T;
+w2 = (1 + beta) * pi / T;
 
-% Convolve filter with window_response
-filter_signal = conv(filter_signal, window_in_freq, 'same')*d_omega; % 'same' to keep the output size consistent
+% Initialize signal
+filter_signal = zeros(size(w_axis));
 
+% First case: H(w) = 1 for |w| <= w1
+idx1 = abs(w_axis) <= w1;
+filter_signal(idx1) = 1;
+
+% Second case: Raised cosine part for w1 < |w| <= w2
+idx2 = (abs(w_axis) > w1) & (abs(w_axis) <= w2);
+filter_signal(idx2) = 0.5 * (1 + cos((T / (2 * beta)) * (abs(w_axis(idx2)) - w1)));
 %% Plot
 fig = figure;
 defaultPos = get(groot, 'DefaultFigurePosition'); % Get MATLAB's default figure size

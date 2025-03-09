@@ -1,10 +1,7 @@
 generate_signals
-
-% t_span = [-70,70];
 t_span = [-15,15];
-
-% rect_window = piecewise(abs(t) <= pi/0.7, 1, 0);
-% filter_signal = filter_signal * rect_window;
+%% Raised Cosine
+raised_cos = sin(27*pi*t/20)/(27*pi*t/20)
 
 %% Plot
 fig = figure;

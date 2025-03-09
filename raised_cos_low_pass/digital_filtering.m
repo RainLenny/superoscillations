@@ -3,8 +3,7 @@ generate_signals
 
 %% CONSTANTS
 f_sampling = 15;
-corner_freq_of_filter = 0.7;
-window_length_for_filter = pi/0.7;
+window_length_for_filter = inf;
 
 % Compute the GCD of the frequencies
 gcd_omega = angular_freqs(1);
@@ -44,6 +43,7 @@ filtered_superoscilation = conv(sampled_superoscilation, sampled_filter, 'same')
 %% Plots
 
 %% Plot signals and filter
+figure
 plot(t_axis, real(sampled_superoscilation), '-o','color', 'b', 'LineWidth', 4, 'DisplayName', 'Superoscillation');
 hold on;
 plot(t_axis, sampled_sinc, '-o','color', 'r', 'LineWidth', 4, 'DisplayName', 'Sinc');
@@ -55,7 +55,7 @@ grid on;
 
 %% Plot FFT of signals and filter
 % Compute FFT
-N = length(t_axis)+10000;
+N = length(t_axis)+100000;
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
 fft_superoscilation = fftshift(abs(fft(sampled_superoscilation,N)));
@@ -66,15 +66,16 @@ fft_filter = fftshift(abs(fft(sampled_filter,N)));
 figure;
 plot(freq_axis, fft_sinc, '-o', 'Color', 'b', 'LineWidth', 2, 'DisplayName', 'Sinc Signal');
 hold on;
-plot(freq_axis, fft_superoscilation, '-o', 'Color', 'g', 'LineWidth', 2, 'DisplayName', 'Superoscillation Signal');
+% plot(freq_axis, fft_superoscilation, '-o', 'Color', 'g', 'LineWidth', 2, 'DisplayName', 'Superoscillation Signal');
 plot(freq_axis, fft_filter, '-o', 'Color', 'r', 'LineWidth', 2, 'DisplayName', 'Filter Signal');
 
 % Customize plot
-xlabel('Frequency (Hz)');
+xlabel('Frequency (Rad/s)');
 ylabel('Amplitude');
 title('FFT of Signals');
 legend('show');
 grid on;
+xlim([-2,2])
 
 %% Plot filtered signals
 figure;

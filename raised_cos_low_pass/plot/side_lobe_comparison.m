@@ -1,6 +1,6 @@
 generate_signals
 
-t_span = [-50,50];
+t_span = [-80,80];
 
 sinc_filter = piecewise(t == 0, 1, sinc(t*0.7/pi))*0.7/pi;
 
@@ -26,5 +26,5 @@ grid on;
 ax=gca;
 ax.FontWeight = 'bold';
 ax.FontSize = 12;
-ylim([-0.052,0.2388])
+ylim([-0.052,0.05])
 hold off;

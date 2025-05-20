@@ -15,8 +15,11 @@ b = 0.85;
 beta = (b-a)/(b+a);
 T = 2*pi/(b+a);
 
-filter_signal = piecewise(t == 0, 1, sinc(t/T)*cos(pi*beta*t/T)/(1-(2*beta*t/T)^2))*(1/T);
-
+filter_signal = piecewise( ...
+    t == 0,                        1/T, ...
+    abs(t) == T/(2*beta),          (beta*sin(pi/(2*beta)))/(2*T), ...
+    sinc(t/T).*cos(pi*beta.*t/T)./(1 - (2*beta.*t/T).^2) * (1/T) ...
+);
 % filter_signal = piecewise(t == 0, 1, sinc(t*0.7/pi))*0.7/pi;
 
 

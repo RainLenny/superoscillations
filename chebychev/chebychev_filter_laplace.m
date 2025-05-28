@@ -1,4 +1,4 @@
-function H = laplace(omega0, N, epsilon)
+function H = chebychev_filter_laplace(omega0, N, epsilon)
 % computes a Chebyshev filter defined by
 %
 %   H(s) = prod_{k=0}^{N-1} [ v_k*(s - u_k) ] / [ u_k*(s - v_k) ],
@@ -54,5 +54,6 @@ end
 
 % Simplify the expression before returning
 H = simplify(H_expr);
+
 
 end

@@ -2,29 +2,22 @@ clear all
 generate_signals
 
 %% CONSTANTS
-f_sampling = 60/2*pi;
+f_sampling = 60/(2*pi);
 
 % Filter Parameters
 omega0 = 1*pi+1.5;  % Corner frequency (rad/s)
 filter_order = 7;         % Filter order
 epsilon = 0.04475;  % Ripple factor 
 
-% % Compute the GCD of the frequencies
-% gcd_omega = angular_freqs(1);
-% for i = 2:length(angular_freqs)
-%     gcd_omega = gcd(sym(gcd_omega), sym(angular_freqs(i)));  % Use symbolic for precision
-% end
-% 
-% % Compute the fundamental period
-% T_period = 2*pi / double(gcd_omega);
+T_period = compute_fundamental_period(angular_freqs(2:4),f_sampling);
 
-T_period = 2;
 
 %% Sampling Signal
-signals_duration = T_period*16*2*2; % In seconds
+signals_duration = T_period*20; % In seconds
 
 dt = 1/f_sampling;
 t_axis = -signals_duration/2:dt:signals_duration/2; % Time samples
+t_axis = t_axis(1:end-1);
 
 % Sample the symbolic signal
 sampled_superoscilation = double(subs(superoscillations_signal, t, t_axis));
@@ -91,8 +84,8 @@ grid on;
 Nfft = length(t_axis);
 omega_axis = linspace(-f_sampling/2, f_sampling/2, Nfft)*2*pi; % Frequency axis
 
-fft_superoscilation = fftshift(abs(fft(sampled_superoscilation,Nfft)))/(10*8000)/0.8;
-fft_cos = fftshift(abs(fft(sampled_cos,Nfft)))/8650*1.4493;
+fft_superoscilation = fftshift(abs(fft(sampled_superoscilation,Nfft)));
+fft_cos = fftshift(abs(fft(sampled_cos,Nfft)));
 fft_filter = fftshift(abs(fft(sampled_filter,Nfft)));
 
 % Plot FFTs

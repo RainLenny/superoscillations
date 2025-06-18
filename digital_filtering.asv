@@ -1,8 +1,10 @@
+clear all
+
 %Filter
 generate_raised_cos_low_pass_filter
 
 %Signal to be filtered
-generate_sinc_signal
+% generate_sinc_signal
 % generate_cos_signal
 % generate_cos_canvas_signal
 

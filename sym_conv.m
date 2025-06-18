@@ -1,47 +1,34 @@
 function y = sym_conv(sym_signal1, sym_signal2, t, varargin)
-%SYM_CONV  Symbolic convolution of two (possibly complex) signals.
-%   y = SYM_CONV(h, x, t) returns 
-%       y(t) = ∫_{-∞}^{∞} h(τ) * x(t - τ) dτ
-%   for symbolic h(t) and x(t).
-%
-%   y = SYM_CONV(h, x, t, 'causal') returns
-%       y(t) = ∫_{0}^{t} h(τ) * x(t - τ) dτ
-%   which is appropriate when both signals are causal (zero for t<0).
+%SYM_CONV  Symbolic convolution via Fourier-domain multiplication.
+%   y = SYM_CONV(h, x, t) returns
+%       y(t) = ifourier(fourier(h(t)) * fourier(x(t)))
+%   y = SYM_CONV(h, x, t, 'causal') enforces causality by zeroing
+%       out y(t) for t < 0 (i.e. multiplying by heaviside(t)).
 %
 % Inputs:
-%   sym_signal1       – a symbolic expression in t, your impulse response
-%   sym_signal2       – a symbolic expression in t, your input signal
-%   t       – the symbolic time variable 
-%   'causal' (optional) – flag to integrate from 0 to t instead of ±∞
+%   sym_signal1    – symbolic expression in t (e.g., impulse response h(t))
+%   sym_signal2    – symbolic expression in t (e.g., input signal x(t))
+%   t              – symbolic time variable
+%   'causal'       – optional flag to enforce y(t)=0 for t<0
 %
 % Output:
-%   y       – the symbolic result of the convolution, simplified
-%
-% Example:
-%   syms t
-%   sym_signal1 = exp(-2*t)*heaviside(t);     % causal decaying exponential
-%   sym_signal2 = (sin(3*t) + 1j*cos(2*t))*heaviside(t);  % causal complex input
-%   y_full   = sym_conv(h, x, t);           % full integral
-%   y_causal = sym_conv(h, x, t, 'causal'); % 0→t integral
-%   pretty(simplify(y_causal))
-%
+%   y              – symbolic expression for the convolution result, simplified
 
-    % introduce dummy integration variable
-    syms tau
+    % define frequency variable
+    syms omega real
 
-    % substitute τ into h and (t–τ) into x
-    h_tau   = subs(sym_signal1, t, tau);
-    x_shift = subs(sym_signal2, t, t - tau);
+    % compute Fourier transforms
+    H = fourier(sym_signal1, t, omega);
+    X = fourier(sym_signal2, t, omega);
 
-    % choose limits
+    % multiply in frequency domain and invert
+    Y = simplify(H .* X);
+    y_full = simplify(ifourier(Y, omega, t));
+
+    % apply causality if requested
     if ~isempty(varargin) && strcmpi(varargin{1}, 'causal')
-        a = 0; 
-        b = t;
+        y = simplify(y_full * heaviside(t));
     else
-        a = -inf; 
-        b =  inf;
+        y = y_full;
     end
-
-    % compute and simplify
-    y = simplify( int(h_tau .* x_shift, tau, a, b) );
 end

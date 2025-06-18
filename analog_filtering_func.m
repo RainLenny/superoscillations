@@ -1,4 +1,4 @@
-function analog_filtering_func(sym_signal,sym_superoscillation,angular_freqs, sym_filter, f_sampling,window_length_for_filter)
+function analog_filtering_func(sym_signal,sym_superoscillation, sym_filter)
 % All the syms signals given to the function should be in their time
 % representation
 
@@ -17,9 +17,9 @@ omega_lim =  2;     % ± limit for frequency axis (rad/s)
 %% Plot time-domain signals
 figure;
 hold on;
-fplot( real(sym_superoscillation), [t_min, t_max], '-','LineWidth',4,'Color', 'b', 'DisplayName','Superoscillation');
-fplot(sym_signal, [t_min, t_max], '-','LineWidth',4,'Color', 'r', 'DisplayName','Signal');
-fplot(abs(sym_filter), [t_min, t_max], '-','LineWidth',4,'Color', 'k', 'DisplayName','Filter');
+fplot(sym_signal, [t_min, t_max], '-','LineWidth',6,'Color', 'r', 'DisplayName','Signal');
+fplot( real(sym_superoscillation), [t_min, t_max], '--','LineWidth',6,'Color', 'b', 'DisplayName','Superoscillation');
+fplot(abs(sym_filter), [t_min, t_max], '-','LineWidth',6,'Color', 'k', 'DisplayName','Filter');
 xlabel('Time (s)');
 ylabel('Amplitude');
 legend('Location','best');
@@ -33,9 +33,9 @@ F_filt  = fourier(sym_filter,     t, omega);
 
 figure;
 hold on;
-fplot(abs(F_signal),  [-omega_lim, omega_lim], '-','LineWidth',2,'Color', 'r', 'DisplayName','Signal');
-fplot(abs(F_super),[-omega_lim, omega_lim], '-','LineWidth',2,'Color', 'b', 'DisplayName','Superoscillation');
-fplot(abs(F_filt), [-omega_lim, omega_lim], '-','LineWidth',2,'Color', 'k', 'DisplayName','Filter');
+fplot(abs(F_super),[-omega_lim, omega_lim], '-','LineWidth',4,'Color', 'b', 'DisplayName','Superoscillation');
+fplot(abs(F_signal),  [-omega_lim, omega_lim], '-','LineWidth',4,'Color', 'r', 'DisplayName','Signal');
+fplot(abs(F_filt), [-omega_lim, omega_lim], '-','LineWidth',4,'Color', 'k', 'DisplayName','Filter');
 xlabel('Frequency [\omega]');
 ylabel('Magnitude');
 title('Symbolic Fourier Transforms');
@@ -65,7 +65,7 @@ ax1.FontSize   = 12;
 % Sinc
 ax2 = nexttile;
 hold on;
-fplot(sym_signal,        [t_min, t_max], 'LineWidth',6,'Color', 'r', 'DisplayName','Original');
+% fplot(sym_signal,        [t_min, t_max], 'LineWidth',6,'Color', 'r', 'DisplayName','Original');
 fplot(real(filtered_signal),      [t_min, t_max], '--','LineWidth',6,'Color', 'b', 'DisplayName','Filtered');
 title('Signal');
 legend('Location','best','FontWeight','bold','FontSize',12);

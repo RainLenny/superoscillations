@@ -1,4 +1,4 @@
-function H = chebychev_HP_filter_laplace(omega0, N, epsilon)
+function H = chebychev_filter_laplace_highpass(omega0, N, epsilon)
 % computes a Chebyshev filter defined by
 %
 %   H(s) = prod_{k=0}^{N-1} [ v_k*(s - u_k) ] / [ u_k*(s - v_k) ],
@@ -28,7 +28,9 @@ function H = chebychev_HP_filter_laplace(omega0, N, epsilon)
 
 % Define the symbolic variable for s
 syms s;
-s_hp = 1/s;
+% Substitution of variables for a high-pass filter 
+s_hp = (omega0)^2 /s;
+
 % Precompute the constant used in the hyperbolic functions
 alpha = asinh(1/epsilon);
 

@@ -10,7 +10,7 @@ epsilon = 0.04475;    % Ripple factor
 syms s omega t real
 
 % Get the symbolic transfer function H(s)
-H_sym = chebychev_filter_laplace(omega0, filter_order, epsilon);
+H_sym = chebychev_filter_laplace_highpass(omega0, filter_order, epsilon);
 
 % Substitute s = j*omega
 H_jw = simplify( subs(H_sym, s, 1j*omega) );
@@ -22,7 +22,7 @@ h_sym_time = ilaplace(H_sym, s, t) * heaviside(t);   % h(t) in closed‐form (us
 h_time_func = matlabFunction(h_sym_time, 'Vars', t);
 
 %% Plot magnitude and phase
-w_min = 0; w_max = 5;   % adjust as needed
+w_min = -5; w_max = 5;   % adjust as needed
 figure;
 subplot(2,1,1);
 fplot(@(w) abs(H_func(w)), [w_min, w_max], 'LineWidth', 2);

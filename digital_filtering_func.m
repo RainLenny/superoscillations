@@ -5,7 +5,7 @@ function digital_filtering_func(syms_signal,syms_superoscillation,angular_freqs,
 %% SAMPLING
 % fundamental_period of the superoscillating signal:
 T_period = compute_fundamental_period(angular_freqs,f_sampling); 
-signals_duration = T_period * 4; % total duration to simulate
+signals_duration = T_period * 4*4; % total duration to simulate
 dt = 1 / f_sampling; % sample‐interval in seconds
 t_axis = -signals_duration/2 : dt : signals_duration/2;
 t_axis = t_axis(1:end-1);
@@ -41,27 +41,29 @@ figure
 plot(t_axis, real(sampled_superoscillation), '-o','color', 'b', 'LineWidth', 4, 'DisplayName', 'Superoscillation');
 hold on;
 plot(t_axis, sampled_signal, '-o','color', 'r', 'LineWidth', 4, 'DisplayName', 'Signal');
-plot(filtered_t_axis, abs(sampled_filter), '-o','color', 'k', 'LineWidth', 4, 'DisplayName', 'Filter');
+plot(filtered_t_axis, real(sampled_filter), '-o','color', 'k', 'LineWidth', 4, 'DisplayName', 'Filter');
 xlabel('Time (s)');
 ylabel('Amplitude');
 legend('show');
 grid on;
+% xlim([-15,15])
 
 %% Plot FFT of signals and filter
 % Compute FFT
 N = length(t_axis);
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
-fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)));
-fft_sinc = fftshift(abs(fft(sampled_signal,N)));
-fft_filter = fftshift(abs(fft(sampled_filter,N)));
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)))*dt;
+fft_superoscillation = fft_superoscillation/(max(fft_superoscillation))*3;
+fft_sinc = fftshift(abs(fft(sampled_signal,N)))*dt;
+fft_filter = fftshift(abs(fft(sampled_filter,N)))*dt;
 
 % Plot FFTs
 figure;
 plot(freq_axis, fft_sinc, '-o', 'Color', 'b', 'LineWidth', 2, 'DisplayName', 'Signal');
 hold on;
-plot(freq_axis, fft_superoscillation, '-o', 'Color', 'g', 'LineWidth', 2, 'DisplayName', 'Superoscillations');
-plot(freq_axis, fft_filter, '-o', 'Color', 'r', 'LineWidth', 2, 'DisplayName', 'Filter');
+plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'LineWidth', 2, 'DisplayName', 'Superoscillations');
+plot(freq_axis, fft_filter, '-o', 'Color', 'k', 'LineWidth', 2, 'DisplayName', 'Filter');
 
 % Customize plot
 xlabel('Frequency (Rad/s)');
@@ -85,7 +87,7 @@ plot(t_axis, real(sampled_superoscillation), 'r', 'LineWidth', 6, 'DisplayName',
 hold on;
 plot(t_axis, real(filtered_superoscillation), ':b', 'LineWidth', 6, 'DisplayName', 'Filtered');
 title('Superoscillations');
-legend('show', 'fontweight', 'bold', 'fontsize', 12);
+legend('Location','best', 'fontweight', 'bold', 'fontsize', 12);
 grid on;
 xlim([-15, 15]);
 ax1.FontWeight = 'bold';
@@ -98,7 +100,7 @@ plot(t_axis, sampled_signal, 'color', 'r', 'LineWidth', 6, 'DisplayName', 'Origi
 hold on;
 plot(t_axis, real(filtered_signal), ':b', 'LineWidth', 6, 'DisplayName', 'Filtered');
 title('Signal');
-legend('show', 'fontweight', 'bold', 'fontsize', 12);
+legend('Location','best', 'fontweight', 'bold', 'fontsize', 12);
 grid on;
 xlim([-15, 15]);
 ax2.FontWeight = 'bold';

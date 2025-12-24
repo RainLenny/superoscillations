@@ -1,5 +1,4 @@
-function [tgrid, Pe, eps_trunc] = multimode_JC_driven(omega, nu0, nmax, J, Drive_integral, T_final, do_err_est)
-%   Interaction-picture dynamics with respect to the free Hamiltonian
+function [tgrid, Pe, eps_trunc] = multimode_JC_driven(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)%   Interaction-picture dynamics with respect to the free Hamiltonian
 %   H_free = sum_k ħ ω_k a_k^† a_k + (1/2)ħ ν0 σ3,
 %   giving
 %     V_I(t) = ħ sum_k J0 [ e^{iΔ_k t} a_k σ_+ + e^{-iΔ_k t} a_k^† σ_- ]
@@ -66,8 +65,8 @@ JC_plus_ops  = cell(K,1);
 JC_minus_ops = cell(K,1);
 
 for k = 1:K
-    JC_plus_ops{k}  = J * (A_ops{k}  * Splus);
-    JC_minus_ops{k} = J * (A_ops{k}' * Sminus);
+    JC_plus_ops{k}  = J_fluc * (A_ops{k}  * Splus);
+    JC_minus_ops{k} = J_fluc * (A_ops{k}' * Sminus);
 end
 
 %% INITIAL STATE
@@ -80,7 +79,7 @@ psi0 = kron(vac_ph, g_tls);
 idx_e = 2:2:dim_tot;
 
 %% CLASSICAL DRIVE
-f = @(t) -1i * J * Drive_integral(t) .* exp(1i * nu0 * t);
+f = @(t) -1i * J_drive*J_fluc * Drive_integral(t) .* exp(1i * nu0 * t);
 
 %% SCHRÖDINGER EQUATION (INTERACTION PICTURE)
 % We pass the operator matrices to the local function handle
@@ -109,7 +108,7 @@ Pe = sum(abs(psi_all(:,idx_e)).^2,2);
 %% ERROR ESTIMATION (RECURSIVE CALL)
 if do_err_est
     fprintf('Calculating truncation error (running with nmax+1)...\n');
-    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J, Drive_integral, T_final, tgrid, Pe);
+    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J0_fluc, J_drive, Drive_integral, T_final, tgrid, Pe)
     fprintf('Numerical error estimate using nmax+1: %.3e\n', eps_trunc);
 else
     % If this IS the error check run, we don't calculate an error on top of it
@@ -120,11 +119,9 @@ end
 
 %% ======================= LOCAL FUNCTIONS =======================
 
-function eps = estimate_truncation_error(omega, nu0, nmax, J0, Drive_integral, T_final, t_orig, Pe_orig)
-
+function eps = estimate_truncation_error(omega, nu0, nmax, J0_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
 % The last argument 'false' prevents infinite recursion:
-[t_new, Pe_new, ~] = multimode_JC_driven(omega, nu0, nmax + 1, J0, Drive_integral, T_final, false);
-
+[t_new, Pe_new, ~] = multimode_JC_driven(omega, nu0, nmax + 1, J0_fluc, J_drive, Drive_integral, T_final, false);
 % Interpolate new result onto original time grid for comparison
 Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear');
 

@@ -5,20 +5,22 @@ amp_scaling = 1;
 [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_Baranov_2014(freq_scaling,amp_scaling);
 
 nu0 = 1;
-T_final = 600;
-J0 = 0.03;
 nmax = 0;
+J_drive = 30;
+J_fluc = 0.001;
+
+T_final = 600;
 do_err_est = 0;
 
 %% Dyamics computation
 
 % SO
-[tgrid_SO, Pe_SO,eps_trunc_SO] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J0, SO_signal, T_final, do_err_est);
-[tgrid_SO_no_cavity, Pe_SO_no_cavity] = JC_drive_only(nu0, J0, SO_signal, [0,T_final]);
+[tgrid_SO, Pe_SO,eps_trunc_SO] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, SO_signal, T_final, do_err_est);
+[tgrid_SO_no_cavity, Pe_SO_no_cavity] = JC_drive_only(nu0, J_fluc*J_drive, SO_signal, [0,T_final]);
 
 %COS
-[tgrid_COS, Pe_COS,eps_trunc_COS] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J0, Cos_signal, T_final, do_err_est);
-[tgrid_COS_no_cavity, Pe_COS_no_cavity] = JC_drive_only(nu0, J0, Cos_signal, [0,T_final]);
+[tgrid_COS, Pe_COS,eps_trunc_COS] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, Cos_signal, T_final, do_err_est);
+[tgrid_COS_no_cavity, Pe_COS_no_cavity] = JC_drive_only(nu0, J_fluc*J_drive, Cos_signal, [0,T_final]);
 
 
 %% PLOT

@@ -6,11 +6,11 @@ amp_scaling = 1;
 
 nu0 = 1;
 tspan = [0,500];
-J = 0.03;
+Jtot = 0.03;
 
 
-[tgrid_SO, Pe_SO] = JC_drive_only(nu0, J, SO_signal, tspan);
-[tgrid_COS, Pe_COS] = JC_drive_only(nu0, J, Cos_signal, tspan);
+[tgrid_SO, Pe_SO] = JC_drive_only(nu0, Jtot, SO_signal, tspan);
+[tgrid_COS, Pe_COS] = JC_drive_only(nu0, Jtot, Cos_signal, tspan);
 
 %% PLOTS
 figure;

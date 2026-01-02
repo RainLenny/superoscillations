@@ -2,7 +2,7 @@
 clear; clc
 freq_scaling = 1;
 amp_scaling = 1;
-[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_Baranov_2014(freq_scaling,amp_scaling);
+[SO_signal, Cos_signal, angular_freqs_SO, angular_freqs_COS]  = generate_signals_Baranov_2014(freq_scaling,amp_scaling);
 
 nu0 = 1;
 nmax = 0;

@@ -1,4 +1,4 @@
-function [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS] = generate_signals_Baranov_2014(freq_scaling,amp_scaling)
+function [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS] = generate_signals_for_plot(freq_scaling,amp_scaling)
 
 % Parameters
 angular_freqs_SO = [1,2,3,4,5] * 0.18 * freq_scaling;
@@ -18,8 +18,8 @@ Cos_normalization = 4.478155155550048; %Scaling such that the energy of the actu
 
 
 % Function handle for cosine
-Cos_signal = @(t)   conj(Cos_normalization .* exp(1i * angular_freqs_COS .* t).*exp(-(t-t_0).^2./T^2));
+Cos_signal = @(t)   real(Cos_normalization .* exp(1i * angular_freqs_COS .* t));
 
 % Function handle for superoscillatory signal
-SO_signal = @(t)  conj(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2).*exp(-(t-t_0).^2./T^2));
+SO_signal = @(t)  real(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2));
 end

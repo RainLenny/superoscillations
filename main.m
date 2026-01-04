@@ -12,19 +12,19 @@ T1 = 500;
 T2 = 300;
 
 T_final = 600;
-do_err_est = 0;
+N_traj = 50;
 
 %% Dyamics computation
 
 % SO
-[tgrid_SO, Pe_SO,eps_trunc_SO] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, SO_signal, T_final, do_err_est);
-% [tgrid_SO, Pe_SO,eps_trunc_SO] = master_multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, SO_signal, T_final, T1, T2, do_err_est);
-[tgrid_SO_no_cavity, Pe_SO_no_cavity] = master_JC_drive_only(nu0, J_fluc*J_drive, SO_signal, [0,T_final], T1, T2,0);
+% [tgrid_SO, Pe_SO,eps_trunc_SO] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, SO_signal, T_final, do_err_est);
+[tgrid_SO, Pe_SO] = master_multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, SO_signal, T_final, T1, T2,0);
+[tgrid_SO_no_cavity, Pe_SO_no_cavity] = master_JC_drive_only(nu0, J_fluc*J_drive, SO_signal, [0,T_final],0, T1, T2);
 
 %COS
-[tgrid_COS, Pe_COS,eps_trunc_COS] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, Cos_signal, T_final, do_err_est);
-% [tgrid_COS, Pe_COS,eps_trunc_COS] = master_multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, Cos_signal, T_final, T1, T2, do_err_est);
-[tgrid_COS_no_cavity, Pe_COS_no_cavity] = master_JC_drive_only(nu0, J_fluc*J_drive, Cos_signal, [0,T_final],T1, T2,0);
+% [tgrid_COS, Pe_COS,eps_trunc_COS] = multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, Cos_signal, T_final, do_err_est);
+[tgrid_COS, Pe_COS] = master_multimode_JC_driven(angular_freqs_SO, nu0, nmax, J_fluc, J_drive, Cos_signal, T_final, T1, T2,0);
+[tgrid_COS_no_cavity, Pe_COS_no_cavity] = master_JC_drive_only(nu0, J_fluc*J_drive, Cos_signal, [0,T_final],0 ,T1, T2);
 
 %% PLOT
 figure;

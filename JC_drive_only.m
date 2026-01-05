@@ -26,12 +26,12 @@ function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
     Cg0 = sqrt(1 - abs(Ce0)^2);
 
     % Effective drive
-    f = @(t) -1i * Jtot .* Drive_integral(t) .* exp(1i * nu0 * t);
+    f = @(t) -1i * Drive_integral(t) .* exp(1i * nu0 * t);
 
     % Two-level ODE: d/dt [Ce; Cg] = -i [0 f; f* 0] [Ce; Cg]
     odefun = @(t, C) [ ...
-        -1i * f(t)        * C(2);  % dCe/dt
-        -1i * conj(f(t))  * C(1)   % dCg/dt
+        -1i * Jtot * f(t)        * C(2);  % dCe/dt
+        -1i * Jtot * conj(f(t))  * C(1)   % dCg/dt
     ];
 
     opts = odeset('RelTol', 1e-9, 'AbsTol', 1e-9);

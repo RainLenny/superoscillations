@@ -5,12 +5,12 @@ amp_scaling = 1;
 [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_Baranov_2014(freq_scaling,amp_scaling);
 
 nu0 = 1;
-nmax = 0;
-J_drive = 30;
-J_fluc = 0.001;
+nmax = 4;
+J_drive = 3;
+J_fluc = 0.01;
 
 T_final = 600;
-do_err_est = 0;
+do_err_est = 1;
 
 %% Dyamics computation
 

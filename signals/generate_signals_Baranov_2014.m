@@ -11,7 +11,7 @@ amps_SO    = [-0.156067704462866 + 0.331660754319902i,...
 
 angular_freqs_COS = 0.9 * freq_scaling; %angular_freqs_SO(end);
 
-t_0 = 200;
+t_0 = 250;
 T = 100;
 
 Cos_normalization = 25/7 * amp_scaling;

@@ -14,7 +14,8 @@ angular_freqs_COS = 0.9 * freq_scaling; %angular_freqs_SO(end);
 t_0 = 250;
 T = 100;
 
-Cos_normalization = 4.478155155550048; %Scaling such that the energy of the actual drives would be the same
+Cos_normalization = 25/7 * amp_scaling;
+
 
 % Function handle for cosine
 Cos_signal = @(t)   conj(Cos_normalization .* exp(1i * angular_freqs_COS .* t).*exp(-(t-t_0).^2./T^2));

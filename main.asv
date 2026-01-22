@@ -6,7 +6,7 @@ amp_scaling = 1;
 
 nu0 = 1;
 n_max = 10;
-factor = 1;
+factor = ;
 J_drive = 60/factor;
 J_fluc = 0.001*factor;
 

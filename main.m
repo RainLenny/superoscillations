@@ -36,7 +36,7 @@ plot(tgrid_COS_no_cavity, Pe_COS_no_cavity, '-.', 'LineWidth', 3, 'Color', 'k');
 
 grid on;
 xlabel('Time [arb]');
-ylabel('Excited state probability');
+ylabel('Excitation probability');
 ax1.FontWeight = 'bold';
 ax1.FontSize   = 12;
 legend({'SO','SO no fluc','COS','COS no fluc'}, 'Location','best');

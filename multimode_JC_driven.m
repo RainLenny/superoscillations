@@ -20,6 +20,8 @@ function [tgrid, Pe, eps_trunc] = multimode_JC_driven(omega, nu0, nmax, J_fluc, 
 %   do_err_est : (Optional) Boolean. If true (default), calculates truncation
 %                error by running the simulation again with nmax+1.
 
+Change the simulation such that nmax caps the total number of photons across all modes!!!!!!!
+
 %% INPUT HANDLING
 if nargin < 7
     do_err_est = true; % Default to calculating error

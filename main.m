@@ -43,8 +43,4 @@ ax1.FontWeight = 'bold';
 ax1.FontSize   = 12;
 legend({'SO','SO no fluc','COS','COS no fluc'}, 'Location','best');
 
-fprintf('\n===== Numerical Error =====\n');
-disp(calculate_pe_bound(length(angular_freqs_SO), J_fluc, T_final, n_max))
-fprintf('============================\n');
-
 % plot_signals(freq_scaling,amp_scaling)

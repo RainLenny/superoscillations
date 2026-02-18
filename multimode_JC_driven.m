@@ -1,4 +1,4 @@
-function [tgrid, Pe] = multimode_JC_driven(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final)
+function [tgrid, Pe, numerical_plus_1_error] = multimode_JC_driven(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final)
 %  Interaction-picture dynamics with respect to the free Hamiltonian.
 %  OPTIMIZED VERSION: Vectorized operator building + Dense state vector.
 
@@ -86,6 +86,16 @@ opts = odeset('RelTol',RelTol, ...
 [tgrid, psi_all] = ode45(ode_rhs, tspan, psi0, opts);
 
 Pe = sum(abs(psi_all(:,idx_e)).^2,2);
+
+%% Nunerical error calculation 
+if do_err_est
+    fprintf('Calculating truncation error (running with nmax+1)...\n');
+    numerical_plus_1_error = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe);
+    fprintf('Numerical error estimate using nmax+1: %.3e\n', numerical_plus_1_error);
+else
+    % If this IS the error check run, we don't calculate an error on top of it
+    numerical_plus_1_error = NaN;
+end
 
 end
 

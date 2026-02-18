@@ -1,4 +1,4 @@
-function [tgrid, Pe, numerical_plus_1_error] = multimode_JC_driven(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final)
+function [tgrid, Pe, numerical_plus_1_error] = multimode_JC_driven(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)
 %  Interaction-picture dynamics with respect to the free Hamiltonian.
 %  OPTIMIZED VERSION: Vectorized operator building + Dense state vector.
 
@@ -100,6 +100,16 @@ end
 end
 
 %% ======================= LOCAL FUNCTIONS =======================
+
+function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
+% The last argument 'false' prevents infinite recursion:
+[t_new, Pe_new, ~] = multimode_JC_driven(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
+% Interpolate new result onto original time grid for comparison
+Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear');
+
+% Compute max absolute difference
+eps = max(abs(Pe_new_interp - Pe_orig));
+end
 
 function status = local_output_fun(t_curr, ~, flag, T_final)
 persistent last_frac

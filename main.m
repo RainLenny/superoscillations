@@ -10,7 +10,7 @@ J_fluc = 0.01;
 T_final = 500;
 nmax = 3;
 
-do_err_est = 0;
+do_err_est = 1;
 
 %% Dyamics computation
 % SO

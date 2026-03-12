@@ -1,4 +1,4 @@
-function [tgrid, Pe, numerical_plus_1_error] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)
+function [tgrid, Pe, n_k_t, n_tot_t, numerical_plus_1_error] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)
 %  Interaction-picture dynamics with respect to the free Hamiltonian.
 %  OPTIMIZED VERSION: Vectorized operator building + Dense state vector.
 
@@ -87,7 +87,15 @@ opts = odeset('RelTol',RelTol, ...
 
 Pe = sum(abs(psi_all(:,idx_e)).^2,2);
 
-%% Nunerical error calculation 
+%% OBSERVABLE: PHOTON NUMBERS
+% Calculate the probability of being in each photon state (tracing out TLS)
+P_ph = abs(psi_all(:, 1:2:dim_tot)).^2 + abs(psi_all(:, 2:2:dim_tot)).^2;
+% Expectation value of photon number for each mode <n_k>
+n_k_t = P_ph * basis_states; 
+% Total photon number <n_tot>
+n_tot_t = sum(n_k_t, 2);
+
+%% Numerical error calculation 
 if do_err_est
     fprintf('Calculating truncation error (running with nmax+1)...\n');
     numerical_plus_1_error = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe);
@@ -103,7 +111,7 @@ end
 
 function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
 % The last argument 'false' prevents infinite recursion:
-[t_new, Pe_new, ~] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
+[t_new, Pe_new, ~, ~, ~] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
 % Interpolate new result onto original time grid for comparison
 Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear');
 

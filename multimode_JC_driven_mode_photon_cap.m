@@ -1,4 +1,5 @@
-function [tgrid, Pe, eps_trunc] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)%   Interaction-picture dynamics with respect to the free Hamiltonian
+function [tgrid, Pe, nk, ntot, eps_trunc] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, do_err_est)
+%   Interaction-picture dynamics with respect to the free Hamiltonian
 %   H_free = sum_k ħ ω_k a_k^† a_k + (1/2)ħ ν0 σ3,
 %   giving
 %     V_I(t) = ħ sum_k J0 [ e^{iΔ_k t} a_k σ_+ + e^{-iΔ_k t} a_k^† σ_- ]
@@ -9,19 +10,22 @@ function [tgrid, Pe, eps_trunc] = multimode_JC_driven_mode_photon_cap(omega, nu0
 %     omega           : 1×K vector of cavity/mode frequencies ω_k
 %     nu0             : TLS transition frequency (scalar)
 %     nmax            : maximum photon number per mode (0..nmax)
-%     J              : coupling strength (scalar, assumed same for all modes)
+%     J               : coupling strength (scalar, assumed same for all modes)
 %     Drive_integral  : function handle representing the integral part in f(t),
 %                       used as f(t) = -1i * J * Drive_integral(t) * exp(1i*nu0*t)
 %     T_final         : final simulation time
 %
 %   OUTPUTS:
-%     tgrid : time points from ODE solver
-%     Pe    : excited-state population of the TLS at each time in tgrid
+%     tgrid     : time points from ODE solver
+%     Pe        : excited-state population of the TLS at each time in tgrid
+%     nk        : length(tgrid) x K matrix of photon number expectation values per mode
+%     ntot      : length(tgrid) x 1 vector of total photon expectation values
+%     eps_trunc : truncation error estimate
 %   do_err_est : (Optional) Boolean. If true (default), calculates truncation
 %                error by running the simulation again with nmax+1.
 
 %% INPUT HANDLING
-if nargin < 7
+if nargin < 8
     do_err_est = true; % Default to calculating error
 end
 
@@ -35,7 +39,6 @@ omega = omega(:).';
 K     = numel(omega);
 Delta = nu0 - omega;
 
-
 fprintf('Multimode JC simulation\n');
 fprintf('K = %d modes, nmax = %d\n', K, nmax);
 
@@ -47,14 +50,12 @@ dim_tot = dim_ph * dim_tls;
 
 fprintf('dim_ph = %d, dim_tot = %d\n', dim_ph, dim_tot);
 
-
 %% LOCAL OPERATORS (TLS)
 sp = sparse([0 0; 1 0]);    % |e><g|
 sm = sp.';                  % |g><e|
 
 %% FULL HILBERT SPACE OPERATORS
 Id_ph  = speye(dim_ph);
-
 Splus  = kron(Id_ph, sp);
 Sminus = kron(Id_ph, sm);
 
@@ -63,7 +64,6 @@ A_ops  = multimode_annihilation_ops_sparse(nmax, K, dim_tls);
 %% INTERACTION OPERATORS (JAYNES–CUMMINGS TERMS)
 JC_plus_ops  = cell(K,1);
 JC_minus_ops = cell(K,1);
-
 for k = 1:K
     JC_plus_ops{k}  = J_fluc * (A_ops{k}  * Splus);
     JC_minus_ops{k} = J_fluc * (A_ops{k}' * Sminus);
@@ -93,9 +93,7 @@ for k = 1:K
 end
 
 %% TIME INTEGRATION
-
 outputFcn = @(t,y,flag) local_output_fun(t,y,flag,T_final);
-
 opts = odeset('RelTol',RelTol, ...
     'AbsTol',AbsTol, ...
     'JPattern',Jpattern, ...
@@ -103,12 +101,31 @@ opts = odeset('RelTol',RelTol, ...
 
 [tgrid, psi_all] = ode15s(ode_rhs, tspan, psi0, opts);
 
+%% OBSERVABLES COMPUTATION
+% TLS Population
 Pe = sum(abs(psi_all(:,idx_e)).^2,2);
+
+% Mode Photon Numbers and Total Photons
+nk = zeros(length(tgrid), K);
+for k = 1:K
+    % Generate the Number Operator N_k = a_k^dagger * a_k
+    Nk_op = A_ops{k}' * A_ops{k};
+    
+    % Because the number operator is diagonal in the Fock basis, 
+    % we can extract the diagonal elements for a highly optimized computation.
+    Nk_diag = diag(Nk_op).'; % 1 x dim_tot row vector
+    
+    % Expectation value <N_k> = sum_i |c_i|^2 * n_{k,i}
+    nk(:, k) = sum(abs(psi_all).^2 .* Nk_diag, 2);
+end
+
+% Total photons is the sum across all modes at each time step
+ntot = sum(nk, 2);
 
 %% ERROR ESTIMATION (RECURSIVE CALL)
 if do_err_est
     fprintf('Calculating truncation error (running with nmax+1)...\n');
-    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe)
+    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe);
     fprintf('Numerical error estimate using nmax+1: %.3e\n', eps_trunc);
 else
     % If this IS the error check run, we don't calculate an error on top of it
@@ -120,8 +137,10 @@ end
 %% ======================= LOCAL FUNCTIONS =======================
 
 function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
-% The last argument 'false' prevents infinite recursion:
-[t_new, Pe_new, ~] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
+% The last argument 'false' prevents infinite recursion. 
+% We ignore the new nk and ntot outputs with ~
+[t_new, Pe_new, ~, ~, ~] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
+
 % Interpolate new result onto original time grid for comparison
 Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear');
 
@@ -162,7 +181,6 @@ a_single = annihilation_operator_sparse(nmax);
 Id_tls = speye(dim_tls);
 
 A_ops = cell(K,1);
-
 for kk = 1:K
     op_ph = 1;
     for mm = 1:K

@@ -1,4 +1,6 @@
-function [] = plot_signals(freq_scaling,amp_scaling)
+plot_signals_1(1,1)
+
+function [] = plot_signals_1(freq_scaling,amp_scaling)
 %% Importing signals
 [VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot(freq_scaling,amp_scaling);
 
@@ -18,20 +20,35 @@ t_axis = t_axis(:);
 sampled_signal = VinCosFun(t_axis);
 sampled_superoscillation = VinSOFun(t_axis);
 
-%% Plot in time
 figure
 hold on;
-plot(t_axis, real(sampled_signal), '-','color', 'b', 'LineWidth', 4, 'DisplayName', 'COS');
-plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'LineWidth', 4, 'DisplayName', 'SO');
+% Capture the handles (h1, h2) as you plot
+h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathrm{0.9\nu_0}$');
+h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
 
-xlabel('Time [arb]', 'FontWeight', 'bold', 'FontSize', 12);
-ylabel('Amplitude [arb]', 'FontWeight', 'bold','FontSize',12);
-legend('show', 'FontWeight', 'bold','FontSize',12);
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
+ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
+
+% Pass the handles in the specific order you want them to appear
+legend([h1, h2], 'FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
+
 grid off;
 xlim([100,400])
 ax=gca;
-ax.FontWeight = 'bold'
-ax.FontSize = 13
+ax.FontWeight = 'bold';
+ax.FontSize = 13;
+
+ax.TickLabelInterpreter = 'latex';
+
+ax.FontWeight = 'bold';
+
+xticks = ax.XTick;
+xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
+ax.XTickLabel = xticklabels;
+
+yticks = ax.YTick;
+yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), yticks, 'UniformOutput', false);
+ax.YTickLabel = yticklabels;
 
 %% FFT the signals
 % Compute FFT
@@ -49,19 +66,52 @@ fft_cos = fft_cos/(sum(fft_cos));
 %% Plot FFTs
 figure;
 hold on;
-plot(freq_axis, (fft_cos), '-', 'Color', 'b', 'LineWidth', 4, 'DisplayName', 'COS');
 
-plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'LineWidth', 4, 'DisplayName', 'SO');
+% 1. Plotting Data
+h2 = plot(freq_axis, (fft_cos), '-', 'Color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathrm{0.9\nu_0}$');
+h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
 
-% Customize plot
-xlabel('Angular frequency [arb]', 'FontWeight', 'bold','FontSize',12);
-ylabel('Amplitude [arb]', 'FontWeight', 'bold','FontSize',12);
-legend('show', 'FontWeight', 'bold','FontSize',12,'Location', 'Best');
+% 2. Vertical reference line & Annotation
+xline(1.0, 'Color', 'black', 'LineWidth', 4);
+text(1, 4.5e-3, '\boldmath$\mathrm{\nu_0}$', ...
+    'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
+    'VerticalAlignment', 'top', 'HorizontalAlignment', 'center', ...
+    'Interpreter', 'latex');
+
+% 3. Standard Labels
+xlabel('\boldmath$\mathrm{Angular \ frequency \ [\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
+ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
+
+% 4. Legend and Limits
+legend([h1, h2], 'FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
 grid off;
-xlim([-1,1])
-% ylim([0,0.5])
-ax=gca;
-ax.FontWeight = 'bold'
-ax.FontSize = 13
+xlim([0, 1.1]);
+ylim([0, 9e-3]);
+
+% 5. Axis Formatting
+ax = gca;
+ax.FontSize = 13;
+ax.TickLabelInterpreter = 'latex';
+ax.FontWeight = 'bold';
+
+% Format X-Ticks (Bold LaTeX)
+xticks = ax.XTick;
+xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
+ax.XTickLabel = xticklabels;
+
+% Format Y-Ticks (Scale values by 1e3 and set as Bold LaTeX)
+yticks = ax.YTick;
+yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y*1e3), yticks, 'UniformOutput', false);
+ax.YTickLabel = yticklabels;
+
+% 6. THE FIX: Manually place the exponent at the top left
+% We use 'Units', 'normalized' so (0,1) is the top-left of the plot box
+text(0, 1, '$\mathbf{\times 10^{-3}}$', ...
+    'Units', 'normalized', ...
+    'Interpreter', 'latex', ...
+    'FontSize', 12, ...
+    'HorizontalAlignment', 'left', ...
+    'VerticalAlignment', 'bottom');
+hold off;
 end
 

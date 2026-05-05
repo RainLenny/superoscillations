@@ -1,8 +1,5 @@
-plot_signals_2(1,1)
-
-function [] = plot_signals_2(freq_scaling,amp_scaling)
 %% Importing signals
-[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot_no_gaussian(freq_scaling,amp_scaling);
+[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot_no_gaussian(1,1);
 
 
 %% SAMPLING Constants
@@ -25,11 +22,11 @@ sampled_superoscillation = VinSOFun(t_axis);
 figure
 hold on;
 plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
-plot(t_axis, cos1, '--','color', 'black', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathrm{\nu_0}$');
+plot(t_axis, cos1, '--','color', 'black', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathbf{\omega_0}$');
 
 % Updated X-Label with bold math and text
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
 legend('show', 'FontWeight', 'bold','FontSize',14,'Location', 'best','Interpreter', 'latex');
 grid off;
 xlim([0,25])
@@ -53,11 +50,11 @@ ax.YTickLabel = yticklabels;
 figure
 hold on;
 % Capture the handles (h1, h2) as you plot
-h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathrm{0.9\nu_0}$');
+h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
 h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'latex');
 
 % Pass the handles in the specific order you want them to appear
 legend([h1, h2], 'FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
@@ -110,7 +107,3 @@ ax.YTickLabel = yticklabels;
 % ax=gca;
 % ax.FontWeight = 'bold'
 % ax.FontSize = 13
-
-
-end
-

@@ -1,4 +1,4 @@
-function [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS] = generate_signals_for_plot_no_gaussian(freq_scaling,amp_scaling)
+function [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS] = generate_signals_for_plot_pulse_shaping(freq_scaling,amp_scaling)
 
 % Parameters
 angular_freqs_SO = [1,2,3,4,5] * 0.18 * freq_scaling;
@@ -17,8 +17,8 @@ T = 100;
 Cos_normalization = 4.4781551283; %Scaling such that the energy of the actual drives would be the same
 
 % Function handle for cosine
-Cos_signal = @(t)   -real(Cos_normalization .* cos(angular_freqs_COS .* t));
+Cos_signal = @(t)   -real(Cos_normalization .* cos(angular_freqs_COS .* t).*2.*(t-t_0)./T^2.*exp(-(t-t_0).^2./T^2));
 
 % Function handle for superoscillatory signal
-SO_signal = @(t)  real(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2));
+SO_signal = @(t)  real(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2).*2.*(t-t_0)./T^2.*exp(-(t-t_0).^2./T^2));
 end

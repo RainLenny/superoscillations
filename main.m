@@ -8,9 +8,11 @@ J_drive = 6;
 J_fluc = 0.01;
 
 T_final = 500;
-nmax = 8;
+nmax = 3;
 
 do_err_est = 1;
+
+REMOVE MINUS SIGN FROM EFFECTIVE DRIVE - MATCH TO PAPER 
 
 %% Dyamics computation
 % SO

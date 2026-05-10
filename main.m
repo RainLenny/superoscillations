@@ -2,17 +2,15 @@
 clear; clc
 freq_scaling = 1;
 amp_scaling = 1;
-[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_Baranov_2014(freq_scaling,amp_scaling);
+[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_equal_spread(freq_scaling,amp_scaling);
 nu0 = 1;
 J_drive = 6;
-J_fluc = 0.01;
+J_fluc = 0.005;
 
 T_final = 500;
-nmax = 3;
+nmax = 0;
 
-do_err_est = 1;
-
-REMOVE MINUS SIGN FROM EFFECTIVE DRIVE - MATCH TO PAPER 
+do_err_est = 0;
 
 %% Dyamics computation
 % SO
@@ -104,4 +102,4 @@ ax3.FontWeight = 'bold';
 ax3.XTickLabel = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), ax3.XTick, 'UniformOutput', false);
 ax3.YTickLabel = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), ax3.YTick, 'UniformOutput', false);
 
-% plot_signals(freq_scaling,amp_scaling)
+plot_signals(SO_signal, Cos_signal, angular_freqs_SO,angular_freqs_COS)

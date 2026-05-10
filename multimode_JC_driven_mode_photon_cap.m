@@ -79,7 +79,7 @@ psi0 = kron(vac_ph, g_tls);
 idx_e = 2:2:dim_tot;
 
 %% CLASSICAL DRIVE
-f = @(t) -1i * J_drive*J_fluc * Drive_integral(t) .* exp(1i * nu0 * t);
+f = @(t) 1i * J_drive*J_fluc * Drive_integral(t) .* exp(1i * nu0 * t);
 
 %% SCHRÖDINGER EQUATION (INTERACTION PICTURE)
 % We pass the operator matrices to the local function handle

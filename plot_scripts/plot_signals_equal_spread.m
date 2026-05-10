@@ -1,5 +1,5 @@
 %% Importing signals
-[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot_pulse_shaping(1,1);
+[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot_equal_spread(1,1);
 
 
 %% SAMPLING Constants
@@ -29,35 +29,15 @@ ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'l
 % Pass the handles in the specific order you want them to appear
 legend([h1, h2], 'FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
 
-grid off;
-xlim([100,400])
-ax=gca;
-ax.FontWeight = 'bold';
-ax.FontSize = 13;
-
-ax.TickLabelInterpreter = 'latex';
-
-ax.FontWeight = 'bold';
-
-xticks = ax.XTick;
-xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
-ax.XTickLabel = xticklabels;
-
-yticks = ax.YTick;
-yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), yticks, 'UniformOutput', false);
-ax.YTickLabel = yticklabels;
 
 %% FFT the signals
 % Compute FFT
 N = length(t_axis);
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
-fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)))*dt;
-fft_superoscillation = fft_superoscillation/(sum(fft_superoscillation));
+fft_cos = fftshift(abs(fft(sampled_signal,N))) / N;
 
-fft_cos = fftshift(abs(fft(sampled_signal,N)))*dt;
-fft_cos = fft_cos/(sum(fft_cos));
-% fft_cos = fftshift(abs(fft(sampled_signal,N)))*dt;
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N))) / N;
 
 
 %% Plot FFTs
@@ -82,31 +62,6 @@ ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$','FontSize', 14, 'Interpreter', 'l
 % 4. Legend and Limits
 legend([h1, h2], 'FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
 grid off;
-xlim([0, 1.1]);
-ylim([0, 8e-3]);
+xlim([0, -1.1]);
+ylim([0, 4e-2]);
 
-% 5. Axis Formatting
-ax = gca;
-ax.FontSize = 13;
-ax.TickLabelInterpreter = 'latex';
-ax.FontWeight = 'bold';
-
-% Format X-Ticks (Bold LaTeX)
-xticks = ax.XTick;
-xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
-ax.XTickLabel = xticklabels;
-
-% Format Y-Ticks (Scale values by 1e3 and set as Bold LaTeX)
-yticks = ax.YTick;
-yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y*1e3), yticks, 'UniformOutput', false);
-ax.YTickLabel = yticklabels;
-
-% 6. THE FIX: Manually place the exponent at the top left
-% We use 'Units', 'normalized' so (0,1) is the top-left of the plot box
-text(0, 1, '$\mathbf{\times 10^{-3}}$', ...
-    'Units', 'normalized', ...
-    'Interpreter', 'latex', ...
-    'FontSize', 12, ...
-    'HorizontalAlignment', 'left', ...
-    'VerticalAlignment', 'bottom');
-hold off;

@@ -68,7 +68,7 @@ idx_e = 2:2:dim_tot;
 
 %% CLASSICAL DRIVE
 % Pre-calculate constant factor
-drive_prefactor = -1i * J_drive * J_fluc;
+drive_prefactor = 1i * J_drive * J_fluc;
 f = @(t) drive_prefactor * Drive_integral(t) .* exp(1i * nu0 * t);
 
 %% SCHRÖDINGER EQUATION (INTERACTION PICTURE)

@@ -1,0 +1,24 @@
+function [SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS] = generate_signals_for_plot_leakage_comparison(freq_scaling,amp_scaling)
+
+% Parameters
+angular_freqs_SO = [1,2,3,4,5] * 0.18 * freq_scaling;
+
+amps_SO    = [-0.156067704462866 + 0.331660754319902i,...
+    -0.861836830340772 - 1.041781767817215i,...
+    2.340666531884434 - 0.600981019561177i,...
+    -0.502399901009243 + 2.633672512223463i,...
+    -1.820362096071554 - 1.322570479164972i] * amp_scaling;
+
+angular_freqs_COS = 1 * freq_scaling; %angular_freqs_SO(end);
+
+t_0 = 250;
+T = 100;
+
+Cos_normalization = 4.4781551283 * 1e-11 * amp_scaling;
+
+% Function handle for cosine
+Cos_signal = @(t)   -real(Cos_normalization .* cos(angular_freqs_COS .* t).*exp(-(t-t_0).^2./T^2));
+
+% Function handle for superoscillatory signal
+SO_signal = @(t)  real(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2).*exp(-(t-t_0).^2./T^2));
+end

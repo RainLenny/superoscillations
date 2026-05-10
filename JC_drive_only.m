@@ -4,8 +4,8 @@ function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
 %   [tgrid, Pe] = JC_DRIVE_ONLY(D, tspan, Ce0)
 %
 % INPUTS
-%The Drive_integral should be the integral convulution result 
-%from the fective drive calcualation, the other constants and nu0
+%The Drive_integral should be the integral convolution result 
+%from the effective drive calculation, the other constants and nu0
 %phase are had here
 %   tspan  : [t0 tf] time interval
 %   Ce0    : initial excited-state amplitude (complex). If omitted,
@@ -34,7 +34,7 @@ function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
         -1i * Jtot * conj(f(t))  * C(1)   % dCg/dt
     ];
 
-    opts = odeset('RelTol', 1e-9, 'AbsTol', 1e-9);
+    opts = odeset('RelTol', 1e-20, 'AbsTol', 1e-20);
     [tgrid, C] = ode45(odefun, tspan, [Ce0; Cg0], opts);
 
     Pe = abs(C(:, 1)).^2;

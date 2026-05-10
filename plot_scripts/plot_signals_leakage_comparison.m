@@ -1,5 +1,5 @@
 %% Importing signals
-[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot(1,1);
+[VinSOFun, VinCosFun, angular_freqs,angular_freqs_COS] = generate_signals_for_plot_leakage_comparison(1,1);
 
 
 %% SAMPLING Constants
@@ -91,22 +91,47 @@ ax.FontSize = 13;
 ax.TickLabelInterpreter = 'latex';
 ax.FontWeight = 'bold';
 
-% Format X-Ticks (Bold LaTeX)
-xticks = ax.XTick;
-xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
-ax.XTickLabel = xticklabels;
+% % Format X-Ticks (Bold LaTeX)
+% xticks = ax.XTick;
+% xticklabels = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), xticks, 'UniformOutput', false);
+% ax.XTickLabel = xticklabels;
+% 
+% % Format Y-Ticks (Scale values by 1e3 and set as Bold LaTeX)
+% yticks = ax.YTick;
+% yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y*1e3), yticks, 'UniformOutput', false);
+% ax.YTickLabel = yticklabels;
 
-% Format Y-Ticks (Scale values by 1e3 and set as Bold LaTeX)
-yticks = ax.YTick;
-yticklabels = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y*1e3), yticks, 'UniformOutput', false);
-ax.YTickLabel = yticklabels;
-
-% 6. THE FIX: Manually place the exponent at the top left
-% We use 'Units', 'normalized' so (0,1) is the top-left of the plot box
-text(0, 1, '$\mathbf{\times 10^{-3}}$', ...
-    'Units', 'normalized', ...
-    'Interpreter', 'latex', ...
-    'FontSize', 12, ...
-    'HorizontalAlignment', 'left', ...
-    'VerticalAlignment', 'bottom');
+% % 6. THE FIX: Manually place the exponent at the top left
+% % We use 'Units', 'normalized' so (0,1) is the top-left of the plot box
+% text(0, 1, '$\mathbf{\times 10^{-3}}$', ...
+%     'Units', 'normalized', ...
+%     'Interpreter', 'latex', ...
+%     'FontSize', 12, ...
+%     'HorizontalAlignment', 'left', ...
+%     'VerticalAlignment', 'bottom');
 hold off;
+
+%% Calculate ratio between peak amplitude and amplitude at resonance 
+%Stable Ratio Calculation
+% 1. Find the peak (Highest Amplitude)
+[max_amp, max_idx] = max(fft_superoscillation);
+freq_at_max = freq_axis(max_idx);
+
+% 2. USE INTERPOLATION for Frequency 1.0
+% This removes the dependency on N by finding the value on the curve at exactly 1.0
+target_freq = 1.0;
+amp_at_1 = interp1(freq_axis, fft_superoscillation, target_freq, 'pchip');
+
+% 3. Calculate the ratio
+amp_ratio = max_amp / amp_at_1;
+
+%Display Results
+fprintf('\n--- Stable Amplitude Ratio Analysis ---\n');
+fprintf('N (FFT points):            %d\n', N);
+fprintf('Peak Frequency Found:      %.8f omega_0\n', freq_at_max);
+fprintf('Target Frequency:          %.8f omega_0\n', target_freq);
+fprintf('----------------------------------------\n');
+fprintf('Highest Amplitude (Max):   %.6e\n', max_amp);
+fprintf('Amplitude at exactly 1.0:  %.6e\n', amp_at_1);
+fprintf('Ratio (Max / Amp@1):       %.6e\n', amp_ratio);
+fprintf('----------------------------------------\n');

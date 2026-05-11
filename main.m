@@ -2,10 +2,10 @@
 clear; clc
 freq_scaling = 1;
 amp_scaling = 1;
-[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_equal_spread(freq_scaling,amp_scaling);
+[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_equal_spread(freq_scaling,amp_scaling,"effective");
 nu0 = 1;
 J_drive = 6;
-J_fluc = 0.005;
+J_fluc = 0.003;
 
 T_final = 500;
 nmax = 0;

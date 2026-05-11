@@ -62,7 +62,7 @@ figure;
 hold on;
 
 % 1. Plotting Data
-h2 = plot(freq_axis, (fft_cos), '-', 'Color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
+h2 = plot(freq_axis, fft_cos, '-', 'Color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
 h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
 
 % 2. Vertical reference line & Annotation

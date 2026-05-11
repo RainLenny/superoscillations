@@ -1,110 +1,122 @@
-%% 1. Initialization and Parameters
+% TLS Dynamics Simulation: Superoscillating Field vs. References
 clear; clc; close all;
 
-freq_scaling = 1;
-amp_scaling = 1;
+%% 1. Parameters
+% TLS parameters
+T1 = 500;       
+T2 = 300;       
+Omega = 0.01;   
+rho30 = -1;     
 
-% SO Parameters
-angular_freqs_SO = [1,2,3,4,5] * 0.18 * freq_scaling;
-amps_SO    = [-0.156067704462866 + 0.331660754319902i,...
-    -0.861836830340772 - 1.041781767817215i,...
-    2.340666531884434 - 0.600981019561177i,...
-    -0.502399901009243 + 2.633672512223463i,...
-    -1.820362096071554 - 1.322570479164972i] * amp_scaling;
+% Pulse parameters
+T_pulse = 100;
+t0 = 200;
+A_SO = 7;
+A_ref1 = 25;
 
-% Reference Parameters
-angular_freqs_COS = angular_freqs_SO; 
-Cos_normalization = 2;
+% Frequencies
+n = 1:5;
+omega = 0.18 * n; 
 
-% Function handles
-% (Corrected Cos_signal to use angular_freqs_COS)
-Cos_signal = @(t)  conj(sum( Cos_normalization .* exp(1i * angular_freqs_COS .* t),2));
-SO_signal = @(t)  conj(sum( amps_SO .* exp(1i * angular_freqs_SO .* t),2));
+% SO Coefficients from the paper
+c_SO = [-0.156 + 0.3311i, ...
+        -0.862 - 1.042i, ...
+         2.341 - 0.601i, ...
+        -0.502 + 2.634i, ...
+        -1.820 - 1.322i];
 
-%% 2. Sampling Constants & Time Axis Definition
-f_sampling = 60/(2*pi);
+% Flat Spectrum Coefficients (Same total energy, equally distributed)
+c_rms = sqrt(mean(abs(c_SO).^2));
+c_flat = c_rms * ones(1, 5);
 
-% Assume 'compute_fundamental_period' is defined elsewhere in your path
-T_period = compute_fundamental_period([angular_freqs_SO, angular_freqs_COS], f_sampling);
-signals_duration = T_period * 100; % total duration to simulate
-dt = 1 / f_sampling; % sample-interval in seconds
+%% 2. Define Signal Functions
+% Superoscillating signal
+f_SO = @(t) A_SO * sum(real(c_SO .* exp(1i * omega .* t))) * exp(-(t-t0)^2 / T_pulse^2);
 
-t_axis = -signals_duration/2 : dt : signals_duration/2;
-t_axis = t_axis(1:end-1);
-t_axis = t_axis(:);
+% Reference 1: Fastest harmonic only (omega_5 = 0.90)
+f_ref1 = @(t) A_ref1 * cos(omega(5) * t) * exp(-(t-t0)^2 / T_pulse^2);
 
-% Sample the global signals
-sampled_signal = Cos_signal(t_axis);
-sampled_superoscillation = SO_signal(t_axis);
+% Reference 2: Flat spectrum (equal energy per frequency)
+f_ref2 = @(t) A_SO * sum(real(c_flat .* exp(1i * omega .* t))) * exp(-(t-t0)^2 / T_pulse^2);
 
+%% 3. Generate Time-Domain Signals
+t_vec = linspace(0, 600, 5000);
+sig_SO = zeros(size(t_vec));
+sig_ref1 = zeros(size(t_vec));
+sig_ref2 = zeros(size(t_vec));
 
-%% Plot in time
-figure
-hold on;
-% Capture the handles (h1, h2) as you plot
-h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'LineWidth', 4, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
-h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'LineWidth', 4, 'DisplayName', '\textbf{SO}');
+for k = 1:length(t_vec)
+    sig_SO(k) = f_SO(t_vec(k));
+    sig_ref1(k) = f_ref1(t_vec(k));
+    sig_ref2(k) = f_ref2(t_vec(k));
+end
 
-xlim([-50,50])
-%% 3. Truncate Signals at Independent Time Windows
-% A. Define the window for the Superoscillating (SO) ripples
-t_start_so = 0; 
-t_end_so = 4*pi;
-idx_so = (t_axis >= t_start_so) & (t_axis <= t_end_so);
-so_trunc = sampled_superoscillation(idx_so);
-t_trunc_so = t_axis(idx_so);
+%% 4. Calculate Frequency-Domain Signals (Spectral Density)
+nu_vec = linspace(0, 1.2, 1000);
+spec_SO = zeros(size(nu_vec));
+spec_ref1 = zeros(size(nu_vec));
+spec_ref2 = zeros(size(nu_vec));
 
-% B. Define the window for the Reference ripples
-% Adjust t_start_ref to wherever the blue line has nice, uniform ripples
-t_start_ref = 10.9956; 
-t_end_ref = t_start_ref + (t_end_so - t_start_so); % Force the same duration
-idx_ref = (t_axis >= t_start_ref) & (t_axis <= t_end_ref);
-cos_trunc = sampled_signal(idx_ref);
-t_trunc_ref = t_axis(idx_ref);
+% Numerical integration for Fourier transform: abs(int(f(t)*exp(i*nu*t) dt))
+for k = 1:length(nu_vec)
+    exp_term = exp(1i * nu_vec(k) * t_vec);
+    spec_SO(k) = abs(trapz(t_vec, sig_SO .* exp_term));
+    spec_ref1(k) = abs(trapz(t_vec, sig_ref1 .* exp_term));
+    spec_ref2(k) = abs(trapz(t_vec, sig_ref2 .* exp_term));
+end
 
-% C. Enforce exactly equal array lengths (to prevent dt rounding mismatches)
-min_len = min(length(so_trunc), length(cos_trunc));
-so_trunc = so_trunc(1:min_len);
-cos_trunc = cos_trunc(1:min_len);
-t_trunc_so = t_trunc_so(1:min_len);
-t_trunc_ref = t_trunc_ref(1:min_len);
+%% 5. Solve Density Matrix ODEs (Eq 5)
+% Initial conditions: rho1=0, rho2=0, rho3=-1
+rho_init = [0; 0; -1];
+tspan = [0 600];
 
-% D. Apply a Window Function (Hamming) to prevent spectral leakage
-window = hamming(min_len);
-so_trunc_win = so_trunc .* window;
-cos_trunc_win = cos_trunc .* window;
+% ODE system function
+ode_system = @(t, rho, func) [ ...
+    rho(2) - rho(1)/T2; ...
+    -rho(1) - rho(2)/T2 + 2*Omega*func(t)*rho(3); ...
+    -2*Omega*func(t)*rho(2) - (rho(3)-rho30)/T1 ];
 
-%% 4. Plot the Truncated Time-Domain Signals 
-% Shift the time axes to 0 just for this plot so we can compare wave shapes directly
-t_shifted = t_trunc_so - t_trunc_so(round(min_len/2)); 
+% Solve for each signal
+[t_SO, rho_SO] = ode45(@(t, rho) ode_system(t, rho, f_SO), tspan, rho_init);
+[t_ref1, rho_ref1] = ode45(@(t, rho) ode_system(t, rho, f_ref1), tspan, rho_init);
+[t_ref2, rho_ref2] = ode45(@(t, rho) ode_system(t, rho, f_ref2), tspan, rho_init);
 
-figure;
-hold on;
-plot(t_shifted, real(cos_trunc)+0.9549032, '-', 'Color', 'b', 'LineWidth', 3, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0 \ (Ref \ Window)}$');
-plot(t_shifted, real(so_trunc), '-', 'Color', 'r', 'LineWidth', 3, 'DisplayName', '\textbf{SO \ (Ripple \ Window)}');
-xlabel('\boldmath$\mathbf{Relative \ Time \ [2\pi/\omega_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$', 'FontSize', 14, 'Interpreter', 'latex');
-title('\textbf{Isolated Ripple Regions (Time-Shifted for Comparison)}', 'FontSize', 14, 'Interpreter', 'latex');
-legend('FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
+%% 6. Plotting
+figure('Position', [100, 100, 1200, 400]);
+
+% --- Subplot 1: Signals in Time ---
+subplot(1, 3, 1);
+plot(t_vec, Omega * sig_SO, 'b', 'LineWidth', 1); hold on;
+plot(t_vec, Omega * sig_ref1, 'r--', 'LineWidth', 1);
+plot(t_vec, Omega * sig_ref2, 'g:', 'LineWidth', 1.5);
+title('Signals in Time (Rabi Frequency \Omega f(t))');
+xlabel('Time');
+ylabel('\Omega f(t)');
+legend('Superoscillating (SO)', 'Ref 1: 0.9\omega_0', 'Ref 2: Flat Spectrum', 'Location', 'best');
+xlim([0 600]);
 grid on;
 
-%% 5. Compute Local FFT
-% Because both slices are the exact same length, we use one frequency axis
-freq_axis_trunc = linspace(-f_sampling/2, f_sampling/2, min_len) * 2 * pi;
+% --- Subplot 2: Signals in Frequency ---
+subplot(1, 3, 2);
+plot(nu_vec, spec_SO, 'b', 'LineWidth', 1); hold on;
+plot(nu_vec, spec_ref1, 'r--', 'LineWidth', 1);
+plot(nu_vec, spec_ref2, 'g:', 'LineWidth', 1.5);
+xline(1.0, 'k-', 'Absorption Band (\omega_0=1)'); % Marker for TLS frequency
+title('Signals in Frequency (Spectral Density)');
+xlabel('Frequency');
+ylabel('Amplitude (a.u.)');
+xlim([0 1.2]);
+grid on;
 
-% Calculate FFT (using windowed signals)
-fft_so_trunc = fftshift(abs(fft(so_trunc_win, min_len))) / min_len;
-fft_cos_trunc = fftshift(abs(fft(cos_trunc_win, min_len))) / min_len;
-
-%% 6. Plot the Local Spectrum
-figure;
-hold on;
-plot(freq_axis_trunc, fft_cos_trunc, '-', 'Color', 'b', 'LineWidth', 3, 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
-plot(freq_axis_trunc, fft_so_trunc, '-', 'Color', 'r', 'LineWidth', 3, 'DisplayName', '\textbf{SO}');
-
-xlim([-3, 3]); % Zoom in on the relevant frequency range to see the shift
-xlabel('\boldmath$\mathbf{Local \ Angular \ frequency \ [\omega_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathbf{Magnitude}$', 'FontSize', 14, 'Interpreter', 'latex');
-title('\textbf{Local Spectrum Comparison (FFT of Truncated Windows)}', 'FontSize', 14, 'Interpreter', 'latex');
-legend('FontWeight', 'bold', 'FontSize', 14, 'Location', 'best', 'Interpreter', 'latex');
+% --- Subplot 3: Excitation in Time ---
+subplot(1, 3, 3);
+plot(t_SO, rho_SO(:,3), 'b', 'LineWidth', 1.5); hold on;
+plot(t_ref1, rho_ref1(:,3), 'r--', 'LineWidth', 1.5);
+plot(t_ref2, rho_ref2(:,3), 'g:', 'LineWidth', 1.5);
+yline(0, 'k--'); % Marker for positive inversion threshold
+title('Excitation in Time (\rho_3 = \rho_{22} - \rho_{11})');
+xlabel('Time');
+ylabel('Population Inversion (\rho_3)');
+ylim([-1 1]);
+xlim([0 600]);
 grid on;

@@ -24,7 +24,7 @@ function [SO_signal, angular_freqs_SO] = generate_SO_equal_spread(freq_scaling, 
 
     % Import from the .mat file instead of hardcoding
     data = load('SO_Baranov.mat', 'amps_SO', 'angular_freqs_SO');
-    amps_SO = data.amps_SO * amp_scaling;
+    amps_SO = amp_scaling;
     angular_freqs_SO = data.angular_freqs_SO * freq_scaling;
 
     t_0 = 250;

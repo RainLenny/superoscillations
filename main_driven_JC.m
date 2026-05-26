@@ -3,7 +3,7 @@ clear; clc;
 % Add all project subfolders to search path
 addpath(genpath(fileparts(mfilename('fullpath'))));
 
-%% CONSTANTS AND SIGNALS
+%% CONSTANTS
 
 % Time and envelope parameters
 t_0 = 250; 
@@ -20,10 +20,10 @@ nmax    = 0;
 % Control flags
 do_err_est = 0;
 
-% Signals:
+%% SIGNALS:
 signal_scaling = 1.3;
 
-[SO_signal, angular_freqs_SO] = generate_SO_equal_spread(1,signal_scaling);
+[SO_signal, angular_freqs_SO] = generate_SO_Baranov(1,signal_scaling);
 
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
 
@@ -53,11 +53,11 @@ figure;
 hold on;
 plot(tgrid_SO, Pe_SO, 'LineWidth', 5, 'Color', 'red', 'DisplayName', '\textbf{SO}');
 plot(tgrid_SO_no_cavity, Pe_SO_no_cavity, '--', 'LineWidth', 3, 'Color', 'k', 'DisplayName', '\textbf{SO no fluc}');
-plot(tgrid_COS, Pe_COS, 'LineWidth', 5, 'Color', 'blue', 'DisplayName', '\boldmath$\mathrm{0.9\nu_0}$');
-plot(tgrid_COS_no_cavity, Pe_COS_no_cavity, '-.', 'LineWidth', 3, 'Color', 'k', 'DisplayName', '{\boldmath $0.9\nu_0$} \textbf{no fluc}');
+plot(tgrid_COS, Pe_COS, 'LineWidth', 5, 'Color', 'blue', 'DisplayName', '\boldmath$\mathrm{0.9\omega_0}$');
+plot(tgrid_COS_no_cavity, Pe_COS_no_cavity, '-.', 'LineWidth', 3, 'Color', 'k', 'DisplayName', '{\boldmath $0.9\omega_0$} \textbf{no fluc}');
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathrm{Excitation \ probability}$');
 legend('show');
 
@@ -72,7 +72,7 @@ plot(tgrid_SO, nk_SO, 'LineWidth', 1.5);
 plot(tgrid_SO, ntot_SO, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathrm{Photon \ Number}$');
 title('\boldmath$\mathrm{SO \ Signal: \ Mode \ Photons \ \& \ Total}$');
 
@@ -93,7 +93,7 @@ plot(tgrid_COS, nk_COS, 'LineWidth', 1.5);
 plot(tgrid_COS, ntot_COS, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathrm{Photon \ Number}$');
 title('\boldmath$\mathrm{COS \ Signal: \ Mode \ Photons \ \& \ Total}$');
 

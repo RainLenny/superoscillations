@@ -1,16 +1,34 @@
-%% CONSTANTS
-clear; clc
-freq_scaling = 1;
-amp_scaling = 1;
-[SO_signal, Cos_signal,angular_freqs_SO, angular_freqs_COS]  = generate_signals_equal_spread(freq_scaling,amp_scaling,"effective");
-nu0 = 1;
+%% PATH SETUP & CONSTANTS
+clear; clc;
+% Add all project subfolders to search path
+addpath(genpath(fileparts(mfilename('fullpath'))));
+
+%% CONSTANTS AND SIGNALS
+
+% Time and envelope parameters
+t_0 = 250; 
+T   = 100;
+
+% Physical and simulation parameters
+nu0    = 1;
 J_drive = 6;
-J_fluc = 0.003;
+J_fluc  = 0.003;
 
 T_final = 500;
-nmax = 0;
+nmax    = 0;
 
+% Control flags
 do_err_est = 0;
+
+% Signals:
+signal_scaling = 1.3;
+
+[SO_signal, angular_freqs_SO] = generate_SO_equal_spread(1,signal_scaling);
+
+[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
+
+% Normalize both signals symbolically by the peak of the first signal
+[SO_signal, Cos_signal] = normalize_signals({SO_signal, Cos_signal}, 'peak');
 
 %% Dyamics computation
 % SO
@@ -27,7 +45,8 @@ fprintf('SO error (Hilbert truncation nmax+1): %.8e\n', eps_trunc_SO);
 fprintf('COS error (Hilbert truncation nmax+1): %.8e\n', eps_trunc_COS);
 fprintf('============================\n');
 
-%% PLOT STYLED WITH BOLD LATEX
+%% PLOTS
+PlotUtils.setupDefaults();
 
 % --- Figure 1: Original Excitation Probability ---
 figure;
@@ -38,17 +57,12 @@ plot(tgrid_COS, Pe_COS, 'LineWidth', 5, 'Color', 'blue', 'DisplayName', '\boldma
 plot(tgrid_COS_no_cavity, Pe_COS_no_cavity, '-.', 'LineWidth', 3, 'Color', 'k', 'DisplayName', '{\boldmath $0.9\nu_0$} \textbf{no fluc}');
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Excitation \ probability}$', 'FontSize', 14, 'Interpreter', 'latex');
-legend('show', 'FontSize', 12, 'Location', 'best', 'Interpreter', 'latex', 'FontWeight', 'bold');
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+ylabel('\boldmath$\mathrm{Excitation \ probability}$');
+legend('show');
 
 % Apply Bold LaTeX Axis Ticks
-ax1 = gca;
-ax1.TickLabelInterpreter = 'latex';
-ax1.FontSize = 13;
-ax1.FontWeight = 'bold';
-ax1.XTickLabel = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), ax1.XTick, 'UniformOutput', false);
-ax1.YTickLabel = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), ax1.YTick, 'UniformOutput', false);
+PlotUtils.styleAxes(gca);
 
 
 % --- Figure 2: SO Photon Dynamics ---
@@ -58,23 +72,18 @@ plot(tgrid_SO, nk_SO, 'LineWidth', 1.5);
 plot(tgrid_SO, ntot_SO, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Photon \ Number}$', 'FontSize', 14, 'Interpreter', 'latex');
-title('\boldmath$\mathrm{SO \ Signal: \ Mode \ Photons \ \& \ Total}$', 'Interpreter', 'latex', 'FontSize', 14);
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+ylabel('\boldmath$\mathrm{Photon \ Number}$');
+title('\boldmath$\mathrm{SO \ Signal: \ Mode \ Photons \ \& \ Total}$');
 
 % Dynamically generate legend for SO modes in Bold LaTeX
 numModesSO = size(nk_SO, 2);
 legSO = arrayfun(@(x) sprintf('\\textbf{Mode %d}', x), 1:numModesSO, 'UniformOutput', false);
 legSO{end+1} = '\textbf{Total}';
-legend(legSO, 'Location', 'best', 'Interpreter', 'latex', 'FontSize', 12);
+legend(legSO);
 
 % Apply Bold LaTeX Axis Ticks
-ax2 = gca;
-ax2.TickLabelInterpreter = 'latex';
-ax2.FontSize = 13;
-ax2.FontWeight = 'bold';
-ax2.XTickLabel = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), ax2.XTick, 'UniformOutput', false);
-ax2.YTickLabel = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), ax2.YTick, 'UniformOutput', false);
+PlotUtils.styleAxes(gca);
 
 
 % --- Figure 3: COS Photon Dynamics ---
@@ -84,22 +93,17 @@ plot(tgrid_COS, nk_COS, 'LineWidth', 1.5);
 plot(tgrid_COS, ntot_COS, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$', 'FontSize', 14, 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Photon \ Number}$', 'FontSize', 14, 'Interpreter', 'latex');
-title('\boldmath$\mathrm{COS \ Signal: \ Mode \ Photons \ \& \ Total}$', 'Interpreter', 'latex', 'FontSize', 14);
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\nu_0]}$');
+ylabel('\boldmath$\mathrm{Photon \ Number}$');
+title('\boldmath$\mathrm{COS \ Signal: \ Mode \ Photons \ \& \ Total}$');
 
 % Dynamically generate legend for COS modes in Bold LaTeX
 numModesCOS = size(nk_COS, 2);
 legCOS = arrayfun(@(x) sprintf('\\textbf{Mode %d}', x), 1:numModesCOS, 'UniformOutput', false);
 legCOS{end+1} = '\textbf{Total}';
-legend(legCOS, 'Location', 'best', 'Interpreter', 'latex', 'FontSize', 12);
+legend(legCOS);
 
 % Apply Bold LaTeX Axis Ticks
-ax3 = gca;
-ax3.TickLabelInterpreter = 'latex';
-ax3.FontSize = 13;
-ax3.FontWeight = 'bold';
-ax3.XTickLabel = arrayfun(@(x) sprintf('$\\mathbf{%g}$', x), ax3.XTick, 'UniformOutput', false);
-ax3.YTickLabel = arrayfun(@(y) sprintf('$\\mathbf{%g}$', y), ax3.YTick, 'UniformOutput', false);
+PlotUtils.styleAxes(gca);
 
 plot_signals(SO_signal, Cos_signal, angular_freqs_SO,angular_freqs_COS)

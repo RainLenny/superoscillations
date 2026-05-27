@@ -23,7 +23,7 @@ function [SO_signal, angular_freqs_SO] = generate_SO_equal_spread(freq_scaling, 
         use_gaussian = true;
     end
     if nargin < 4 || isempty(use_conj)
-        use_conj = true;
+        use_conj = false;
     end
 
     % Import from the .mat file instead of hardcoding

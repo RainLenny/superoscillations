@@ -25,9 +25,10 @@ signal_scaling = 7;
 [SO_signal_Baranov, angular_freqs_SO_Baranov] = generate_SO_Baranov(1, signal_scaling);
 [SO_signal_flat, angular_freqs_SO_flat] = generate_SO_equal_spread(1, signal_scaling);
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
+[Cos_resonant_signal, angular_freqs_COS_resonant] = generate_Cos_reference(1);
 
 % Normalize both signals symbolically by the peak of the first signal
-norm_sigs = normalize_signals({SO_signal_Baranov, SO_signal_flat, Cos_signal}, 'peak');
+norm_sigs = normalize_signals({SO_signal_Baranov, SO_signal_flat, Cos_signal,Cos_resonant_signal}, 'peak');
 
 % Generate distinct colors for plotting
 
@@ -39,13 +40,16 @@ signals(1).name = '\textbf{SO Baranov}';
 signals(1).data    = norm_sigs{1};
 
 % --- Add Signal 2 ---
-signals(2).name = '\textbf{SO flat}';
+signals(2).name = '\textbf{flat spectrum}';
 signals(2).data    = norm_sigs{2};
 
 % --- Add Signal 3 ---
 signals(3).name = '\boldmath$\mathrm{0.9\omega_0}$';
 signals(3).data    = norm_sigs{3};
 
+% --- Add Signal 4 ---
+signals(4).name = '\boldmath$\mathrm{\omega_0}$';
+signals(4).data    = norm_sigs{4};
 
 %% 4. Main Processing Loop
 % FIX: Ensure dt is small enough to capture the 30 rad/s high-frequency components

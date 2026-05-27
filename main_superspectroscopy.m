@@ -20,7 +20,7 @@ nu0_TLS1 = 1.00;
 nu0_TLS2 = 1.01;
 
 %% 3. Generate Signals & Build Struct Array
-signal_scaling = 1.3;
+signal_scaling = 7;
 
 [SO_signal_Baranov, angular_freqs_SO_Baranov] = generate_SO_Baranov(1, signal_scaling);
 [SO_signal_flat, angular_freqs_SO_flat] = generate_SO_equal_spread(1, signal_scaling);
@@ -48,8 +48,10 @@ signals(3).data    = norm_sigs{3};
 
 
 %% 4. Main Processing Loop
-% Common time vector for interpolation
-t_common = linspace(t_span(1), t_span(2), 5000)';
+% FIX: Ensure dt is small enough to capture the 30 rad/s high-frequency components
+% avoiding both visual aliasing and integration (cumtrapz) errors.
+dt_common = 0.01;
+t_common = (t_span(1):dt_common:t_span(2))';
 
 % Index corresponding to T1_integ
 idx_start = find(t_common >= T1_integ, 1);
@@ -61,18 +63,15 @@ t_axis = t_common(idx_start:end);
 for i = 1:length(signals)
     disp(['Processing ' signals(i).name '...']);
 
-    % --- Run Solver for TLS 1 ---
-    [t_out1, rho_out1] = optical_bloch(t_span, rho_init, nu0_TLS1, params, signals(i).data);
+    % --- Run Solver (Pass t_common directly to avoid pchip interpolation) ---
+    [~, rho_out1] = optical_bloch(t_common, rho_init, nu0_TLS1, params, signals(i).data);
+    [~, rho_out2] = optical_bloch(t_common, rho_init, nu0_TLS2, params, signals(i).data);
 
-    % --- Run Solver for TLS 2 ---
-    [t_out2, rho_out2] = optical_bloch(t_span, rho_init, nu0_TLS2, params, signals(i).data);
-
-    % --- Interpolate to common grid ---
-    signals(i).rho_tls1 = interp1(t_out1, rho_out1, t_common, 'pchip'); % size: [length(t_common) x 3]
-    signals(i).rho_tls2 = interp1(t_out2, rho_out2, t_common, 'pchip'); % size: [length(t_common) x 3]
+    signals(i).rho_tls1 = rho_out1; 
+    signals(i).rho_tls2 = rho_out2; 
 
     % --- Calculate J for each component (rho1, rho2, rho3) ---
-    J_vals = zeros(length(t_axis), 3); % columns: rho1, rho2, rho3
+    J_vals = zeros(length(t_axis), 3); 
 
     for comp = 1:3
         r1 = signals(i).rho_tls1(:, comp);
@@ -81,6 +80,7 @@ for i = 1:length(signals)
         numerator_integrand   = (r1 - r2).^2;
         denominator_integrand = 0.5 * (r1.^2 + r2.^2);
 
+        % cumtrapz is now highly accurate due to the dense 0.01 step size
         num_int = cumtrapz(t_common(idx_start:end), numerator_integrand(idx_start:end));
         den_int = cumtrapz(t_common(idx_start:end), denominator_integrand(idx_start:end));
 
@@ -89,9 +89,8 @@ for i = 1:length(signals)
         J_vals(:, comp) = num_int ./ den_int;
     end
 
-    signals(i).J = J_vals; % size: [length(t_axis) x 3]
+    signals(i).J = J_vals; 
 end
-
 %% 5. Plotting
 component_labels = {'\rho_1', '\rho_2', '\rho_3'};
 PlotUtils.setupDefaults();

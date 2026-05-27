@@ -23,9 +23,9 @@ do_err_est = 0;
 %% SIGNALS:
 signal_scaling = 1.3;
 
-[SO_signal, angular_freqs_SO] = generate_SO_Baranov(1,signal_scaling);
+[SO_signal, angular_freqs_SO] = generate_SO_Baranov(1,signal_scaling,true,true);
 
-[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
+[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9,signal_scaling,true,true);
 
 % Normalize both signals symbolically by the peak of the first signal
 [SO_signal, Cos_signal] = normalize_signals({SO_signal, Cos_signal}, 'peak');

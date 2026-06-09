@@ -1,6 +1,7 @@
 %% Setup Parameters
 clear; clc; close all;
 
+rng(3);
 %% 1. Global constants and Time
 t_span = [-50 50];
 
@@ -31,16 +32,18 @@ signal_scaling = 7;
 
 % Assuming these helper functions are defined elsewhere in your path
 [SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
-[SO_signal_Denys_no_SO, ~] = generate_SO_from_dat_file('SO_Denys_no_SO', 1, signal_scaling, false);
+[SO_signal_Denys_no_SO, ~] = generate_SO_from_dat_file('SO_Denys_random_phase', 1, signal_scaling, false);
 [SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 
+% --- Define the artificially cut signal ---
+% Smooth notch window to remove the central superoscillations 
+cut_window = @(t) 1 - exp(-(t/3).^6); 
+SO_signal_Denys_cut = @(t) SO_signal_Denys(t) .* cut_window(t);
+
 [Cos_signal_9, ~] = generate_Cos_reference(0.9, 1, false);
-[Cos_signal_8, ~] = generate_Cos_reference(0.8, 1, false);
-[Cos_signal_7, ~] = generate_Cos_reference(0.7, 1, false);
-[Cos_signal_6, ~] = generate_Cos_reference(0.6, 1, false);
 
 % Normalize both signals symbolically by the peak of the first signal
-norm_sigs = normalize_signals({SO_signal_Denys, SO_signal_Denys_no_SO, SO_signal_flat, Cos_signal_9, Cos_signal_8, Cos_signal_7, Cos_signal_6}, 'peak');
+norm_sigs = normalize_signals({SO_signal_Denys, SO_signal_Denys_cut, SO_signal_Denys_no_SO, SO_signal_flat, Cos_signal_9}, 'peak');
 
 % Initialize the signals struct array
 signals = struct('name', {}, 'data', {}, 'y_filt1', {}, 'y_filt2', {}, 'J', {});
@@ -49,26 +52,20 @@ signals = struct('name', {}, 'data', {}, 'y_filt1', {}, 'y_filt2', {}, 'J', {});
 signals(1).name = '\textbf{SO Denys}';
 signals(1).data = norm_sigs{1};
 
-signals(2).name = '\textbf{SO Denys (No SO)}';
+signals(2).name = '\textbf{SO Denys (Cut Center)}';
 signals(2).data = norm_sigs{2};
 
-signals(3).name = '\textbf{flat spectrum}';
+signals(3).name = '\textbf{SO Denys (random phase)}';
 signals(3).data = norm_sigs{3};
 
-signals(4).name = '\boldmath$\mathrm{0.9}$';
+signals(4).name = '\textbf{flat spectrum}';
 signals(4).data = norm_sigs{4};
 
-signals(5).name = '\boldmath$\mathrm{0.8}$';
+signals(5).name = '\boldmath$\mathrm{0.9}$';
 signals(5).data = norm_sigs{5};
 
-signals(6).name = '\boldmath$\mathrm{0.7}$';
-signals(6).data = norm_sigs{6};
-
-signals(7).name = '\boldmath$\mathrm{0.6}$';
-signals(7).data = norm_sigs{7};
-
 %% 4. Main Processing Loop
-dt_common = 0.01;
+dt_common = 0.001;
 t_common = (t_span(1):dt_common:t_span(2))';
 
 % Find the index corresponding to the center point
@@ -195,7 +192,7 @@ f_sampling = 60/(2*pi);
 
 % Calculate fundamental period of all aggregated frequencies
 T_period = compute_fundamental_period([angular_freqs_SO_Denys], f_sampling);
-signals_duration = T_period * 100; % total duration to simulate
+signals_duration = T_period * 5; % total duration to simulate
 dt = 1 / f_sampling; % sample-interval in seconds
 
 % Setup precise FFT time axis
@@ -244,15 +241,21 @@ xlim([-2 2]);
 % --- Plot Wave and Instantaneous Frequency (d_angle/dt) ---
 figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
 
-% Extract the time-domain data for the first three signals 
+% Extract the time-domain data for the first four signals 
 y_denys   = arrayfun(signals(1).data, t_common);
-y_denys_no_SO = arrayfun(signals(2).data, t_common);
-y_flat    = arrayfun(signals(3).data, t_common);
+y_denys_cut = arrayfun(signals(2).data, t_common);
+y_denys_no_SO = arrayfun(signals(3).data, t_common);
+y_flat    = arrayfun(signals(4).data, t_common);
 
 % Compute instantaneous frequency for SO Denys
 z_denys = hilbert(y_denys);                       % Analytic signal
 phase_denys = unwrap(angle(z_denys));             % Continuous phase
 inst_freq_denys = gradient(phase_denys, dt_common); % d(angle)/dt
+
+% Compute instantaneous frequency for SO Denys (Cut Center)
+z_denys_cut = hilbert(y_denys_cut);
+phase_denys_cut = unwrap(angle(z_denys_cut));
+inst_freq_denys_cut = gradient(phase_denys_cut, dt_common);
 
 % Compute instantaneous frequency for SO Denys (no SO)
 z_denys_no_SO = hilbert(y_denys_no_SO);
@@ -269,7 +272,7 @@ x_limits = [-5 5];
 y_limits = [-4 5];
 
 % Subplot 1: SO Denys
-subplot(3,1,1);
+subplot(4,1,1);
 hold on;
 plot(t_common, y_denys, 'LineWidth', 2, 'DisplayName', 'wave');
 plot(t_common, inst_freq_denys, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
@@ -283,8 +286,23 @@ if exist('PlotUtils', 'class')
     PlotUtils.styleAxes(gca);
 end
 
-% Subplot 2: SO Denys (No SO)
-subplot(3,1,2);
+% Subplot 2: SO Denys (Cut Center)
+subplot(4,1,2);
+hold on;
+plot(t_common, y_denys_cut, 'LineWidth', 2, 'DisplayName', 'wave');
+plot(t_common, inst_freq_denys_cut, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
+title('SO Denys (Cut Center): Wave and Instantaneous Frequency');
+xlabel('time');
+xlim(x_limits);
+ylim(y_limits);
+grid on;
+legend('Location', 'northeast');
+if exist('PlotUtils', 'class')
+    PlotUtils.styleAxes(gca);
+end
+
+% Subplot 3: SO Denys (No SO)
+subplot(4,1,3);
 hold on;
 plot(t_common, y_denys_no_SO, 'LineWidth', 2, 'DisplayName', 'wave');
 plot(t_common, inst_freq_denys_no_SO, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
@@ -298,8 +316,8 @@ if exist('PlotUtils', 'class')
     PlotUtils.styleAxes(gca);
 end
 
-% Subplot 3: Flat Spectrum
-subplot(3,1,3);
+% Subplot 4: Flat Spectrum
+subplot(4,1,4);
 hold on;
 plot(t_common, y_flat, 'LineWidth', 2, 'DisplayName', 'wave');
 plot(t_common, inst_freq_flat, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');

@@ -35,16 +35,18 @@ signal_scaling = 7;
 
 % Assuming these helper functions are defined elsewhere in your path
 [SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
-[SO_signal_Denys_no_SO, ~] = generate_SO_from_dat_file('SO_Denys_no_SO', 1, signal_scaling, false);
+[SO_signal_Denys_no_SO, ~] = generate_SO_from_dat_file('SO_Denys_random_phase', 1, signal_scaling, false);
 [SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 
+% --- Define the artificially cut signal ---
+% Smooth notch window to remove the central superoscillations 
+cut_window = @(t) 1 - exp(-(t/3).^6); 
+SO_signal_Denys_cut = @(t) SO_signal_Denys(t) .* cut_window(t);
+
 [Cos_signal_9, ~] = generate_Cos_reference(0.9, 1, false);
-[Cos_signal_8, ~] = generate_Cos_reference(0.8, 1, false);
-[Cos_signal_7, ~] = generate_Cos_reference(0.7, 1, false);
-[Cos_signal_6, ~] = generate_Cos_reference(0.6, 1, false);
 
 % Normalize both signals symbolically by the peak of the first signal
-norm_sigs = normalize_signals({SO_signal_Denys, SO_signal_Denys_no_SO, SO_signal_flat, Cos_signal_9, Cos_signal_8, Cos_signal_7, Cos_signal_6}, 'peak');
+norm_sigs = normalize_signals({SO_signal_Denys, SO_signal_Denys_cut, SO_signal_Denys_no_SO, SO_signal_flat, Cos_signal_9}, 'peak');
 
 % Initialize the signals struct array
 signals = struct('name', {}, 'data', {}, 'y_filt1', {}, 'y_filt2', {}, 'J', {});
@@ -53,24 +55,17 @@ signals = struct('name', {}, 'data', {}, 'y_filt1', {}, 'y_filt2', {}, 'J', {});
 signals(1).name = '\textbf{SO Denys}';
 signals(1).data = norm_sigs{1};
 
-signals(2).name = '\textbf{SO Denys (No SO)}';
+signals(2).name = '\textbf{SO Denys (Cut Center)}';
 signals(2).data = norm_sigs{2};
 
-signals(3).name = '\textbf{flat spectrum}';
+signals(3).name = '\textbf{SO Denys (random phase)}';
 signals(3).data = norm_sigs{3};
 
-signals(4).name = '\boldmath$\mathrm{0.9}$';
+signals(4).name = '\textbf{flat spectrum}';
 signals(4).data = norm_sigs{4};
 
-signals(5).name = '\boldmath$\mathrm{0.8}$';
+signals(5).name = '\boldmath$\mathrm{0.9}$';
 signals(5).data = norm_sigs{5};
-
-signals(6).name = '\boldmath$\mathrm{0.7}$';
-signals(6).data = norm_sigs{6};
-
-signals(7).name = '\boldmath$\mathrm{0.6}$';
-signals(7).data = norm_sigs{7};
-
 %% 4. Main Processing Loop
 dt_common = 0.001;
 t_common = (t_span(1):dt_common:t_span(2))';

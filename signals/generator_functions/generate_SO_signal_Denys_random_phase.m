@@ -23,12 +23,12 @@ amps_SO = amps_SO(:).';
 angular_freqs_SO = angular_freqs_SO(:)';
 
 %% 3. Save Parameters Directly
-output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'signals', 'data');
+output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'data');
 if ~exist(output_dir, 'dir')
     mkdir(output_dir);
 end
-save(fullfile(output_dir, 'SO_Denys_no_SO.mat'), 'amps_SO', 'angular_freqs_SO');
-disp('Parameters saved to SO_Denys_no_SO.mat');
+save(fullfile(output_dir, 'SO_Denys_random_phase.mat'), 'amps_SO', 'angular_freqs_SO');
+disp('Parameters saved to SO_Denys_random_phase.mat');
 
 %% 4. Logic and Plotting (Reconstruction & Visualization)
 % Define a wider time range

@@ -1,28 +1,32 @@
-function [inst_freq, phase, z] = compute_instantaneous_frequency(y, t_or_dt)
-%COMPUTE_INSTANTANEOUS_FREQUENCY Analytically calculates the instantaneous frequency of a signal.
+function inst_freq = compute_instantaneous_frequency(angular_freqs, amps, t)
+%COMPUTE_INSTANTANEOUS_FREQUENCY Analytically calculates the instantaneous frequency of a signal
+%consisting of a sum of complex exponentials.
 %
-%   [inst_freq, phase, z] = compute_instantaneous_frequency(y, t_or_dt)
+%   inst_freq = compute_instantaneous_frequency(angular_freqs, amps, t)
 %
 %   INPUTS:
-%     y       : Vector of signal values (real or complex). If complex, the real part is used.
-%     t_or_dt : Either a vector of time points corresponding to y, or a scalar sampling interval (dt).
+%     angular_freqs : Vector of angular frequencies
+%     amps          : Vector of complex amplitudes
+%     t             : Vector of time points
 %
 %   OUTPUTS:
-%     inst_freq : Instantaneous frequency of the signal.
-%     phase     : Unwrapped phase of the analytic signal.
-%     z         : Complex analytic signal.
+%     inst_freq : Instantaneous frequency of the signal evaluated at points t.
 
-
-    % Get the real part of the signal as the Hilbert transform is defined on real signals
-    y_real = real(y);
-
-    % Calculate the analytic signal
-    z = hilbert(y_real);
-
-    % Calculate the unwrapped phase
-    phase = unwrap(angle(z));
-
-    % Compute the gradient (derivative) of phase with respect to time/sampling step
-    inst_freq = gradient(phase, t_or_dt);
+    angular_freqs = angular_freqs(:);
+    amps = amps(:);
+    t_shape = size(t);
+    t = t(:).'; % make row vector
+    
+    % Denominator: sum(c_n * exp(i * w_n * t))
+    f_t = sum(amps .* exp(1i * angular_freqs .* t), 1);
+    
+    % Numerator: sum(c_n * w_n * exp(i * w_n * t))
+    df_t = sum(amps .* angular_freqs .* exp(1i * angular_freqs .* t), 1);
+    
+    % Instantaneous frequency is Re(df_t / f_t)
+    inst_freq = real(df_t ./ f_t);
+    
+    % Return same shape as input t
+    inst_freq = reshape(inst_freq, t_shape);
 
 end

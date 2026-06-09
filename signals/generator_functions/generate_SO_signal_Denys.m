@@ -112,7 +112,7 @@ end
 
 % Instantaneous Frequency Analysis
 % Compute instantaneous frequency using the refactored function
-inst_freq = compute_instantaneous_frequency(E_total, t_continuous);
+inst_freq = compute_instantaneous_frequency(angular_freqs_SO, amps_SO, t_continuous);
 
 figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
 plot(t_continuous, E_total, 'LineWidth', 2, 'DisplayName', 'wave s(t)'); 

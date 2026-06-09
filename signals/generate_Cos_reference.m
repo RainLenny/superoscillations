@@ -1,7 +1,7 @@
-function [Cos_signal, angular_freqs_COS] = generate_Cos_reference(angular_freqs_COS, amps_COS, use_gaussian, use_conj)
+function [Cos_signal, angular_freqs_COS, amps_COS] = generate_Cos_reference(angular_freqs_COS, amps_COS, use_gaussian, use_conj)
 %GENERATE_COS_REFERENCE Generate a general-purpose Cosine reference signal
 %
-%   [Cos_signal, angular_freqs_COS] = generate_Cos_reference(angular_freqs_COS, amps_COS, use_gaussian, use_conj)
+%   [Cos_signal, angular_freqs_COS, amps_COS] = generate_Cos_reference(angular_freqs_COS, amps_COS, use_gaussian, use_conj)
 %
 %   INPUTS:
 %     angular_freqs_COS : scalar or vector of angular frequencies
@@ -12,6 +12,7 @@ function [Cos_signal, angular_freqs_COS] = generate_Cos_reference(angular_freqs_
 %   OUTPUTS:
 %     Cos_signal        : function handle representing the Cosine reference signal
 %     angular_freqs_COS : 1xK vector of frequencies
+%     amps_COS          : 1xK vector of complex amplitudes
 
     if nargin < 2 || isempty(amps_COS)
         amps_COS = 1;
@@ -23,6 +24,6 @@ function [Cos_signal, angular_freqs_COS] = generate_Cos_reference(angular_freqs_
         use_conj = false;
     end
 
-    [Cos_signal, angular_freqs_COS] = generate_signal_base(angular_freqs_COS, amps_COS, use_gaussian, use_conj);
+    [Cos_signal, angular_freqs_COS, amps_COS] = generate_signal_base(angular_freqs_COS, amps_COS, use_gaussian, use_conj);
 
 end

@@ -31,16 +31,16 @@ time_noise_std = 0.05;  % Standard deviation of noise added to the time-domain o
 signal_scaling = 7;
 
 % Assuming these helper functions are defined elsewhere in your path
-[SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
+[SO_signal_Denys, angular_freqs_SO_Denys, amps_SO] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
 
 % Manually generate random phase signal 
 N_no_SO = length(angular_freqs_SO_Denys);
 rng(1);
 tau_rand = rand(1, N_no_SO);
 amps_no_SO = exp(-1i * angular_freqs_SO_Denys .* tau_rand) * signal_scaling;
-[SO_signal_Denys_no_SO, ~] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
+[SO_signal_Denys_no_SO, ~, amps_no_SO] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
 
-[SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
+[SO_signal_flat, angular_freqs_SO_flat, amps_FLAT] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 
 % --- Define the artificially cut signal ---
 % Smooth notch window to remove the central superoscillations 
@@ -255,10 +255,10 @@ y_denys_no_SO = arrayfun(signals(3).data, t_common);
 y_flat    = arrayfun(signals(4).data, t_common);
 
 % Compute instantaneous frequency for each signal using the refactored function
-inst_freq_denys = compute_instantaneous_frequency(y_denys, dt_common);
-inst_freq_denys_cut = compute_instantaneous_frequency(y_denys_cut, dt_common);
-inst_freq_denys_no_SO = compute_instantaneous_frequency(y_denys_no_SO, dt_common);
-inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_common);
+inst_freq_denys = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_SO, t_common);
+inst_freq_denys_cut = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_SO, t_common);
+inst_freq_denys_no_SO = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_no_SO, t_common);
+inst_freq_flat = compute_instantaneous_frequency(angular_freqs_SO_flat, amps_FLAT, t_common);
 
 % Create visual limits similar to the provided reference image
 x_limits = [-5 5];

@@ -1,7 +1,7 @@
-function [SO_signal, angular_freqs_SO] = generate_SO_leakage_comparison(freq_scaling, amp_scaling, use_gaussian, use_conj)
+function [SO_signal, angular_freqs_SO, amps_SO] = generate_SO_leakage_comparison(freq_scaling, amp_scaling, use_gaussian, use_conj)
 %GENERATE_SO_LEAKAGE_COMPARISON Generate the Superoscillating (SO) signal for Leakage Comparison
 %
-%   [SO_signal, angular_freqs_SO] = generate_SO_leakage_comparison(freq_scaling, amp_scaling, use_gaussian, use_conj)
+%   [SO_signal, angular_freqs_SO, amps_SO] = generate_SO_leakage_comparison(freq_scaling, amp_scaling, use_gaussian, use_conj)
 %
 %   INPUTS:
 %     freq_scaling  : multiplier for frequencies (default 1)
@@ -12,6 +12,7 @@ function [SO_signal, angular_freqs_SO] = generate_SO_leakage_comparison(freq_sca
 %   OUTPUTS:
 %     SO_signal         : function handle of the SO signal
 %     angular_freqs_SO  : 1xN vector of scaled angular frequencies
+%     amps_SO           : 1xN vector of scaled complex amplitudes
 
     if nargin < 1 || isempty(freq_scaling)
         freq_scaling = 1;
@@ -31,6 +32,6 @@ function [SO_signal, angular_freqs_SO] = generate_SO_leakage_comparison(freq_sca
     amps_SO = data.amps_SO * amp_scaling;
     angular_freqs_SO = data.angular_freqs_SO * freq_scaling;
 
-    [SO_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
+    [SO_signal, angular_freqs_SO, amps_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
 
 end

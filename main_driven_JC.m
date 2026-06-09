@@ -23,12 +23,12 @@ do_err_est = 0;
 %% SIGNALS:
 signal_scaling = 1.3;
 
-[SO_signal, angular_freqs_SO, amps_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
+[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
 
-[Cos_signal, angular_freqs_COS, amps_COS] = generate_Cos_reference(0.9,signal_scaling,true,true);
+[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9,signal_scaling,true,true);
 
 % Flat spectrum signal with same frequencies
-[Flat_signal, angular_freqs_FLAT, amps_FLAT] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, true);
+[Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, true);
 
 % Random phase signal (like the one in main_filters_noise.m, keeping Baranov amplitudes)
 N_SO = length(angular_freqs_SO);
@@ -37,7 +37,7 @@ amps_baranov = data_baranov.amps_SO * signal_scaling;
 rng(1);
 tau_rand = rand(1, N_SO);
 amps_rand = abs(amps_baranov) .* exp(-1i .* tau_rand);
-[Rand_signal, angular_freqs_RAND, amps_RAND] = generate_signal_base(angular_freqs_SO, amps_rand, true, true);
+[Rand_signal, ~] = generate_signal_base(angular_freqs_SO, amps_rand, true, true);
 
 % Normalize all signals symbolically by the peak of the first signal
 [SO_signal, Cos_signal, Flat_signal, Rand_signal] = normalize_signals({SO_signal, Cos_signal, Flat_signal, Rand_signal}, 'peak');
@@ -178,6 +178,7 @@ PlotUtils.styleAxes(gca);
 % --- Figure 6: Instantaneous Frequency Analysis ---
 % Time grid for instantaneous frequency analysis
 t_inst = linspace(200, 300, 5000)';
+dt_inst = t_inst(2) - t_inst(1);
 
 y_so   = arrayfun(SO_signal, t_inst);
 y_cos  = arrayfun(Cos_signal, t_inst);
@@ -185,10 +186,10 @@ y_flat = arrayfun(Flat_signal, t_inst);
 y_rand = arrayfun(Rand_signal, t_inst);
 
 % Compute instantaneous frequency for each signal using the refactored function
-inst_freq_so = compute_instantaneous_frequency(angular_freqs_SO, amps_SO, t_inst);
-inst_freq_cos = compute_instantaneous_frequency(angular_freqs_COS, amps_COS, t_inst);
-inst_freq_flat = compute_instantaneous_frequency(angular_freqs_SO, amps_FLAT, t_inst);
-inst_freq_rand = compute_instantaneous_frequency(angular_freqs_SO, amps_RAND, t_inst);
+inst_freq_so = compute_instantaneous_frequency(y_so, dt_inst);
+inst_freq_cos = compute_instantaneous_frequency(y_cos, dt_inst);
+inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_inst);
+inst_freq_rand = compute_instantaneous_frequency(y_rand, dt_inst);
 
 figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
 

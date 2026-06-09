@@ -1,7 +1,7 @@
-function [SO_signal, angular_freqs_SO, amps_SO] = generate_equal_spread(input_freqs, freq_scaling, amp_scaling, use_gaussian, use_conj)
+function [SO_signal, angular_freqs_SO] = generate_equal_spread(input_freqs, freq_scaling, amp_scaling, use_gaussian, use_conj)
 %GENERATE_SO_EQUAL_SPREAD Generate the Superoscillating (SO) signal for Equal Spread method
 %
-%   [SO_signal, angular_freqs_SO, amps_SO] = generate_SO_equal_spread(freq_scaling, amp_scaling, use_gaussian, use_conj)
+%   [SO_signal, angular_freqs_SO] = generate_SO_equal_spread(freq_scaling, amp_scaling, use_gaussian, use_conj)
 %
 %   INPUTS:
 %     freq_scaling  : multiplier for frequencies (default 1)
@@ -12,7 +12,6 @@ function [SO_signal, angular_freqs_SO, amps_SO] = generate_equal_spread(input_fr
 %   OUTPUTS:
 %     SO_signal         : function handle of the SO signal
 %     angular_freqs_SO  : 1xN vector of scaled angular frequencies
-%     amps_SO           : 1xN vector of scaled complex amplitudes
 
     if nargin < 2 || isempty(freq_scaling)
         freq_scaling = 1;
@@ -28,9 +27,9 @@ function [SO_signal, angular_freqs_SO, amps_SO] = generate_equal_spread(input_fr
     end
 
     % Import from the .mat file instead of hardcoding
-    amps_SO = ones(size(input_freqs)) * amp_scaling;
+    amps_SO = amp_scaling;
     angular_freqs_SO = input_freqs * freq_scaling;
 
-    [SO_signal, angular_freqs_SO, amps_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
+    [SO_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
 
 end

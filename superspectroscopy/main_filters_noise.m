@@ -1,42 +1,50 @@
-function run_filter_analysis_core(sys1, sys2, params)
-% RUN_FILTER_ANALYSIS_CORE Unified core simulation and plotting logic for filter analysis scripts.
-%
-%   run_filter_analysis_core(sys1, sys2, params)
-%
-%   Inputs:
-%       sys1  - transfer function (tf) object for Filter 1
-%       sys2  - transfer function (tf) object for Filter 2 (empty [] if noise is added instead)
-%       params - struct with the following fields:
-%           .time_noise_std       - standard deviation of noise to add if sys2 is empty
-%           .labels.filter1       - legend label for Filter 1
-%           .labels.filter2       - legend label for Filter 2
-%           .titles.distinguishability - plot title for J Distinguishability
-%           .titles.outputs       - plot title for time-domain outputs
-%           .titles.fft           - plot title for FFT response
-%           .duration_factor      - multiplication factor for signals_duration (T_period * duration_factor)
-%           .t_span               - [t_start t_end] time span
-%           .T_center             - center point from which integration window expands
-%           .max_window_length    - max window length for J calculation
-%           .signal_scaling       - scaling factor for signal amplitudes
+%% Setup Parameters
+clear; clc; close all;
+
+rng(3);
+%% 1. Global constants and Time
+t_span = [-50 50];
+
+% Integration window parameters for J calculation
+T_center = 0;   % CHOSEN CENTER POINT: The point from which the window expands evenly
+
+% For J integral calculation 
+max_window_length = 7; % Total window size in time units (e.g., seconds)
+
+%% 2. Filter Design & Noise Parameters
+% We design a single analog Chebyshev Type I low-pass filter
+filter_order = 4;
+ripple_dB = 0.5; % Peak-to-peak passband ripple in dB
+
+% The transition frequency is set around 0.7 to 1.0 rad/s
+wc = 1.1; % Cutoff frequency for the Filter (rad/s)
+
+% Generate continuous-time transfer functions
+[num, den] = cheby1(filter_order, ripple_dB, wc, 's');
+sys = tf(num, den);
+
+% --- NOISE PARAMETERS ---
+% Tune these to control how "noisy" the second filter appears
+time_noise_std = 0.05;  % Standard deviation of noise added to the time-domain output
 
 %% 3. Generate Signals & Build Struct Array
-signal_scaling = params.signal_scaling;
+signal_scaling = 7;
 
 % Assuming these helper functions are defined elsewhere in your path
-[SO_signal_Denys, angular_freqs_SO_Denys, amps_SO] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
+[SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
 
 % Manually generate random phase signal 
 N_no_SO = length(angular_freqs_SO_Denys);
 rng(1);
 tau_rand = rand(1, N_no_SO);
 amps_no_SO = exp(-1i * angular_freqs_SO_Denys .* tau_rand) * signal_scaling;
-[SO_signal_Denys_no_SO, ~, amps_no_SO] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
+[SO_signal_Denys_no_SO, ~] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
 
-[SO_signal_flat, angular_freqs_SO_flat, amps_FLAT] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
+[SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 
 % --- Define the artificially cut signal ---
 % Smooth notch window to remove the central superoscillations 
-cut_window = @(t) 1 - exp(-(t/3).^6); 
+cut_window = @(t) 1 - exp(-(t/3.5).^6); 
 SO_signal_Denys_cut = @(t) SO_signal_Denys(t) .* cut_window(t);
 
 [Cos_signal_9, ~] = generate_Cos_reference(0.9, 1, false);
@@ -65,10 +73,10 @@ signals(5).data = norm_sigs{5};
 
 %% 4. Main Processing Loop
 dt_common = 0.001;
-t_common = (params.t_span(1):dt_common:params.t_span(2))';
+t_common = (t_span(1):dt_common:t_span(2))';
 
 % Find the index corresponding to the center point
-idx_center = find(t_common >= params.T_center, 1);
+idx_center = find(t_common >= T_center, 1);
 if isempty(idx_center)
     error('T_center is outside the defined time span.');
 end
@@ -78,7 +86,7 @@ end
 max_k_bounds = min(idx_center - 1, length(t_common) - idx_center);
 
 % 2. Determine bounds based on user-defined max window length
-max_k_window = floor((params.max_window_length / 2) / dt_common);
+max_k_window = floor((max_window_length / 2) / dt_common);
 
 % 3. Apply the strictest limit
 max_k = min(max_k_bounds, max_k_window);
@@ -97,17 +105,11 @@ for i = 1:length(signals)
     u_in = arrayfun(signals(i).data, t_common);
 
     % --- Run Filter Simulation ---
-    if isempty(sys2)
-        % 1. Ideal filter output
-        y1 = lsim(sys1, u_in, t_common);
-        
-        % 2. "Noisy" filter output (Add simulated noise to the output)
-        y2 = y1 + params.time_noise_std * randn(size(y1));
-    else
-        % Simulating the two continuous-time filters
-        y1 = lsim(sys1, u_in, t_common);
-        y2 = lsim(sys2, u_in, t_common);
-    end
+    % 1. Ideal filter output
+    y1 = lsim(sys, u_in, t_common);
+    
+    % 2. "Noisy" filter output (Add simulated noise to the output)
+    y2 = y1 + time_noise_std * randn(size(y1));
 
     signals(i).y_filt1 = y1; 
     signals(i).y_filt2 = y2; 
@@ -145,32 +147,32 @@ for i = 1:length(signals)
     plot(window_sizes, signals(i).J, 'LineWidth', lw, ...
          'DisplayName', signals(i).name);
 end
-title(params.titles.distinguishability);
+title('Distinguishability J (Ideal vs Noisy Filter)');
 xlabel('Observation Window');
 ylabel('J Parameter');
 grid on;
 legend('Location', 'best', 'Interpreter', 'latex');
-xlim([0 params.max_window_length]);
+xlim([0 max_window_length]);
 
 
 % --- Plot filter outputs in a separate figure ---
 figure('Color', 'w', 'Name', 'Filter Outputs');
 hold on;
 for i = 1:length(signals)
-    % Solid line for Filter 1
+    % Solid line for Ideal Filter
     plot(t_common, signals(i).y_filt1, 'LineWidth', lw, ...
-        'DisplayName', sprintf('%s (%s)', signals(i).name, params.labels.filter1));
+        'DisplayName', sprintf('%s (Ideal)', signals(i).name));
     
-    % Dashed line for Filter 2
+    % Dashed line for Noisy Filter
     plot(t_common, signals(i).y_filt2, '--', 'LineWidth', lw, ...
-        'DisplayName', sprintf('%s (%s)', signals(i).name, params.labels.filter2));
+        'DisplayName', sprintf('%s (Noisy)', signals(i).name));
 end
-title(params.titles.outputs);
+title('Time-domain trajectories: Ideal vs Noisy Filter');
 xlabel('Time t');
 ylabel('Output Amplitude');
 grid on;
 legend('Location', 'best', 'Interpreter', 'latex');
-xlim(params.t_span);
+xlim(t_span);
 
 
 % --- Plot all input signals (Time Domain) ---
@@ -186,7 +188,7 @@ ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
 title('Time-domain comparison of all input signals');
 grid on;
 legend('Location', 'best', 'Interpreter', 'latex');
-xlim(params.t_span);
+xlim(t_span);
 if exist('PlotUtils', 'class')
     PlotUtils.styleAxes(gca);
 end
@@ -197,7 +199,7 @@ f_sampling = 60/(2*pi);
 
 % Calculate fundamental period of all aggregated frequencies
 T_period = compute_fundamental_period([angular_freqs_SO_Denys], f_sampling);
-signals_duration = T_period * params.duration_factor; % total duration to simulate
+signals_duration = T_period * 5; % total duration to simulate
 dt = 1 / f_sampling; % sample-interval in seconds
 
 % Setup precise FFT time axis
@@ -221,30 +223,22 @@ for i = 1:length(signals)
 end
 
 % 2. Calculate and plot the Filter Frequency Responses
-[num1, den1] = tfdata(sys1, 'v');
-H1_mag = abs(freqs(num1, den1, freq_axis));
+H1_mag = abs(freqs(num, den, freq_axis));
 
-if isempty(sys2)
-    % --- ADD NOISE TO THE FREQUENCY RESPONSE PLOT ---
-    % We add noise directly to the magnitude curve for plotting purposes
-    H2_mag = H1_mag + params.time_noise_std * randn(size(H1_mag));
-    H2_mag(H2_mag < 0) = 0; % Prevent the noisy magnitude from dropping below zero physically
-    filter2_lw = 2.0; % Lowered line width slightly so noise is visible
-else
-    [num2, den2] = tfdata(sys2, 'v');
-    H2_mag = abs(freqs(num2, den2, freq_axis));
-    filter2_lw = 5.0;
-end
+% --- ADD NOISE TO THE FREQUENCY RESPONSE PLOT ---
+% We add noise directly to the magnitude curve for plotting purposes
+H2_mag = H1_mag + time_noise_std * randn(size(H1_mag));
+H2_mag(H2_mag < 0) = 0; % Prevent the noisy magnitude from dropping below zero physically
 
 % Plot the filter shapes using distinct dark, dashed/dotted lines 
 plot(freq_axis, H1_mag, '--k', 'LineWidth', 5.0, ...
-    'DisplayName', params.labels.filter1);
-plot(freq_axis, H2_mag, ':k', 'LineWidth', filter2_lw, ...
-    'DisplayName', params.labels.filter2);
+    'DisplayName', 'Ideal Filter');
+plot(freq_axis, H2_mag, ':k', 'LineWidth', 2.0, ...  % Lowered line width slightly so noise is visible
+    'DisplayName', 'Noisy Filter');
 
 xlabel('\boldmath$\mathrm{Angular \ frequency \ [\omega_0]}$', 'Interpreter', 'latex');
 ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
-title(params.titles.fft);
+title('Frequency-domain: Input signals vs. Ideal and Noisy Filter Roll-off');
 grid on;
 legend('Location', 'best', 'Interpreter', 'latex');
 
@@ -261,17 +255,17 @@ y_denys_no_SO = arrayfun(signals(3).data, t_common);
 y_flat    = arrayfun(signals(4).data, t_common);
 
 % Compute instantaneous frequency for each signal using the refactored function
-inst_freq_denys = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_SO, t_common);
-inst_freq_denys_cut = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_SO, t_common);
-inst_freq_denys_no_SO = compute_instantaneous_frequency(angular_freqs_SO_Denys, amps_no_SO, t_common);
-inst_freq_flat = compute_instantaneous_frequency(angular_freqs_SO_flat, amps_FLAT, t_common);
+inst_freq_denys = compute_instantaneous_frequency(y_denys, dt_common);
+inst_freq_denys_cut = compute_instantaneous_frequency(y_denys_cut, dt_common);
+inst_freq_denys_no_SO = compute_instantaneous_frequency(y_denys_no_SO, dt_common);
+inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_common);
 
 % Create visual limits similar to the provided reference image
 x_limits = [-5 5];
 y_limits = [-4 5];
 
 % Subplot 1: SO Denys
-subplot(4,1,1);
+subplot(2,1,1);
 hold on;
 plot(t_common, y_denys, 'LineWidth', 2, 'DisplayName', 'wave');
 plot(t_common, inst_freq_denys, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
@@ -286,7 +280,7 @@ if exist('PlotUtils', 'class')
 end
 
 % Subplot 2: SO Denys (Cut Center)
-subplot(4,1,2);
+subplot(2,1,2);
 hold on;
 plot(t_common, y_denys_cut, 'LineWidth', 2, 'DisplayName', 'wave');
 plot(t_common, inst_freq_denys_cut, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
@@ -298,36 +292,4 @@ grid on;
 legend('Location', 'northeast');
 if exist('PlotUtils', 'class')
     PlotUtils.styleAxes(gca);
-end
-
-% Subplot 3: SO Denys (No SO)
-subplot(4,1,3);
-hold on;
-plot(t_common, y_denys_no_SO, 'LineWidth', 2, 'DisplayName', 'wave');
-plot(t_common, inst_freq_denys_no_SO, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
-title('SO Denys (No SO): Wave and Instantaneous Frequency');
-xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
-grid on;
-legend('Location', 'northeast');
-if exist('PlotUtils', 'class')
-    PlotUtils.styleAxes(gca);
-end
-
-% Subplot 4: Flat Spectrum
-subplot(4,1,4);
-hold on;
-plot(t_common, y_flat, 'LineWidth', 2, 'DisplayName', 'wave');
-plot(t_common, inst_freq_flat, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
-title('Flat Spectrum: Wave and Instantaneous Frequency');
-xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
-grid on;
-legend('Location', 'northeast');
-if exist('PlotUtils', 'class')
-    PlotUtils.styleAxes(gca);
-end
-
 end

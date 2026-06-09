@@ -1,7 +1,7 @@
-function [signal, angular_freqs, amps] = generate_signal_base(angular_freqs, amps, use_gaussian, use_conj)
+function [signal, angular_freqs] = generate_signal_base(angular_freqs, amps, use_gaussian, use_conj)
 %GENERATE_SIGNAL_BASE Base signal generation function using sum-of-exponentials logic
 %
-%   [signal, angular_freqs, amps] = generate_signal_base(angular_freqs, amps, use_gaussian, use_conj)
+%   [signal, angular_freqs] = generate_signal_base(angular_freqs, amps, use_gaussian, use_conj)
 %
 %   INPUTS:
 %     angular_freqs : row vector of angular frequencies

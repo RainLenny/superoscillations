@@ -35,7 +35,14 @@ signal_scaling = 7;
 
 % Assuming these helper functions are defined elsewhere in your path
 [SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
-[SO_signal_Denys_no_SO, ~] = generate_SO_from_dat_file('SO_Denys_random_phase', 1, signal_scaling, false);
+
+% Manually generate random phase signal 
+N_no_SO = length(angular_freqs_SO_Denys);
+rng(1);
+tau_rand = rand(1, N_no_SO);
+amps_no_SO = exp(-1i * angular_freqs_SO_Denys .* tau_rand) * signal_scaling;
+[SO_signal_Denys_no_SO, ~] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
+
 [SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 
 % --- Define the artificially cut signal ---
@@ -250,15 +257,9 @@ figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
 y_denys = arrayfun(signals(1).data, t_common);
 y_flat  = arrayfun(signals(2).data, t_common);
 
-% Compute instantaneous frequency for SO Denys
-z_denys = hilbert(y_denys);                       % Analytic signal
-phase_denys = unwrap(angle(z_denys));             % Continuous phase
-inst_freq_denys = gradient(phase_denys, dt_common); % d(angle)/dt
-
-% Compute instantaneous frequency for SO Flat
-z_flat = hilbert(y_flat);                         % Analytic signal
-phase_flat = unwrap(angle(z_flat));               % Continuous phase
-inst_freq_flat = gradient(phase_flat, dt_common);   % d(angle)/dt
+% Compute instantaneous frequency for each signal using the refactored function
+inst_freq_denys = compute_instantaneous_frequency(y_denys, dt_common);
+inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_common);
 
 % Create visual limits similar to the provided reference image
 x_limits = [-5 5];

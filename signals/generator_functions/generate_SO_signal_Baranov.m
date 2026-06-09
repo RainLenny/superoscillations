@@ -1,6 +1,10 @@
 clc;
 clear;
 
+% Add all project subfolders to search path
+addpath(genpath(fullfile(fileparts(mfilename('fullpath')), '..', '..')));
+
+
 % MATLAB Code to generate the specific superoscillating signal from the paper:
 % "Abrupt Rabi oscillations in a superoscillating electric field"
 
@@ -31,7 +35,7 @@ amps_SO = amps_SO(:).';
 angular_freqs_SO = angular_freqs_SO(:)';
 
 % Save directly to the signals/data directory
-output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'signals', 'data');
+output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'data');
 if ~exist(output_dir, 'dir')
     mkdir(output_dir);
 end
@@ -80,27 +84,15 @@ end
 
 
 
-%% 6. Analytical Instantaneous Frequency Analysis
-% Preallocate arrays for the analytic signal and its derivative
-z_analytical = zeros(size(t_continuous));
-dz_analytical = zeros(size(t_continuous));
+%% 6. Instantaneous Frequency Analysis
+% Compute instantaneous frequency using the refactored function
+inst_freq = compute_instantaneous_frequency(s_t, t_continuous);
 
-% Construct the exact analytic signal z(t) and its exact derivative z'(t)
-for n = 1:N
-    term = amps_SO(n) * exp(1i * angular_freqs_SO(n) * t_continuous);
-    z_analytical = z_analytical + term;
-    dz_analytical = dz_analytical + 1i * angular_freqs_SO(n) * term;
-end
-
-% REMOVED THE NEGATIVE SIGN HERE:
-% Standard math identity: omega = Im(z' / z)
-inst_freq_analytical = imag(dz_analytical ./ z_analytical); 
-
-figure('Color', 'w', 'Name', 'Analytical Instantaneous Frequency Analysis');
-plot(t_continuous, real(z_analytical), 'LineWidth', 2, 'DisplayName', 'wave s(t)'); 
+figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
+plot(t_continuous, s_t, 'LineWidth', 2, 'DisplayName', 'wave s(t)'); 
 hold on;
-plot(t_continuous, inst_freq_analytical, 'LineWidth', 2, 'DisplayName', 'Analytical \omega_{inst}(t)');
-title('SO Baranov: Wave and Analytical Instantaneous Frequency');
+plot(t_continuous, inst_freq, 'LineWidth', 2, 'DisplayName', '\omega_{inst}(t)');
+title('SO Baranov: Wave and Instantaneous Frequency');
 xlabel('Time');
 ylim([-6 6]); 
 grid on;

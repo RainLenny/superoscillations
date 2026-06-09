@@ -1,6 +1,10 @@
 clc;
 clear;
 
+% Add all project subfolders to search path
+addpath(genpath(fullfile(fileparts(mfilename('fullpath')), '..', '..')));
+
+
 % MATLAB Code to generate a superoscillating signal via destructive interference
 % Based on the heuristic time-delay optimization method from:
 % "Superoscillations Deliver Superspectroscopy" (McCaul et al., 2023)
@@ -46,7 +50,7 @@ amps_SO = amps_SO(:).';
 angular_freqs_SO = angular_freqs_SO(:)';
 
 %% 4. Save Parameters Directly
-output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'signals', 'data');
+output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'data');
 if ~exist(output_dir, 'dir')
     mkdir(output_dir);
 end
@@ -106,25 +110,15 @@ for i=1:N
     fprintf('c_%d = %7.3f %+.3fi\n', i, real(amps_SO(i)), imag(amps_SO(i)));
 end
 
-% Analytical Instantaneous Frequency Analysis
-% Preallocate arrays for the analytic signal and its derivative
-z_analytical = zeros(size(t_continuous));
-dz_analytical = zeros(size(t_continuous));
+% Instantaneous Frequency Analysis
+% Compute instantaneous frequency using the refactored function
+inst_freq = compute_instantaneous_frequency(E_total, t_continuous);
 
-% Construct the exact analytic signal z(t) and its exact derivative z'(t) using stored negated amps_SO
-for n = 1:N
-    term = amps_SO(n) * exp(1i * angular_freqs_SO(n) * t_continuous);
-    z_analytical = z_analytical + term;
-    dz_analytical = dz_analytical + 1i * angular_freqs_SO(n) * term;
-end
-
-inst_freq_analytical = imag(dz_analytical ./ z_analytical); 
-
-figure('Color', 'w', 'Name', 'Analytical Instantaneous Frequency Analysis');
-plot(t_continuous, real(z_analytical), 'LineWidth', 2, 'DisplayName', 'wave s(t)'); % real(z_analytical) is identical to s_t
+figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
+plot(t_continuous, E_total, 'LineWidth', 2, 'DisplayName', 'wave s(t)'); 
 hold on;
-plot(t_continuous, inst_freq_analytical, 'LineWidth', 2, 'DisplayName', 'Analytical \omega_{inst}(t)');
-title('SO Denys: Wave and Analytical Instantaneous Frequency');
+plot(t_continuous, inst_freq, 'LineWidth', 2, 'DisplayName', '\omega_{inst}(t)');
+title('SO Denys: Wave and Instantaneous Frequency');
 xlabel('Time');
 grid on;
 legend('Location', 'northeast');

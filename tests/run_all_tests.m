@@ -1,0 +1,1 @@
+test_normalize_signals()

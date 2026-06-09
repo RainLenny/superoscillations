@@ -5,7 +5,7 @@ addpath(genpath(fileparts(mfilename('fullpath'))));
 
 PlotUtils.setupDefaults();
 
-[SO_signal, angular_freqs_SO] = generate_SO_Baranov();
+[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov');
 [Cos_signal_unscaled, angular_freqs_COS] = generate_Cos_reference(0.7, -1, true);
 
 % Scale Cos_signal symbolically to match the peak of SO_signal

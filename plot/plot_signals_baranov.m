@@ -2,7 +2,7 @@
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-[VinSOFun_comp, angular_freqs] = generate_SO_Baranov(1,1,true);
+[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true);
 [VinCosFun_comp_unscaled, angular_freqs_COS] = generate_Cos_reference(0.7, -1, true);
 
 % Scale Cos_signal symbolically to match the peak of SO_signal

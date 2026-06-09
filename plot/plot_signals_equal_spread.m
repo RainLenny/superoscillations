@@ -2,7 +2,7 @@
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-[VinSOFun_comp, angular_freqs] = generate_SO_equal_spread(1,1,true);
+[VinSOFun_comp, angular_freqs] = generate_equal_spread(1,1,true);
 angular_freqs_COS = angular_freqs;
 t_0 = 250; T = 100;
 s_t_COS_unscaled = @(t) sum(1 .* exp(1i * angular_freqs_COS .* t(:)), 2);

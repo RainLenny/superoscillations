@@ -22,8 +22,8 @@ nu0_TLS2 = 1.01;
 %% 3. Generate Signals & Build Struct Array
 signal_scaling = 7;
 
-[SO_signal_Baranov, angular_freqs_SO_Baranov] = generate_SO_Baranov(1, signal_scaling);
-[SO_signal_flat, angular_freqs_SO_flat] = generate_SO_equal_spread(1, signal_scaling);
+[SO_signal_Baranov, angular_freqs_SO_Baranov] = generate_SO_from_dat_file("SO_baranov", 1, signal_scaling);
+[SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Baranov, 1, signal_scaling);
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
 [Cos_resonant_signal, angular_freqs_COS_resonant] = generate_Cos_reference(1);
 

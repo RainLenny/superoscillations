@@ -25,9 +25,23 @@ A = exp(1i * t_j' * angular_freqs_SO);
 % Solve the linear system for the complex coefficients c_n
 amps_SO = A \ s_j';
 
+%% Save
+
+amps_SO = amps_SO(:).';
+angular_freqs_SO = angular_freqs_SO(:)';
+
+% Save directly to the signals/data directory
+output_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'signals', 'data');
+if ~exist(output_dir, 'dir')
+    mkdir(output_dir);
+end
+save(fullfile(output_dir, 'SO_Baranov.mat'), 'amps_SO', 'angular_freqs_SO');
+
+%% PLOT
+
 % 4. Reconstruct the superoscillating signal over a continuous time range
 % The paper plots this from t=0 to roughly t=55 in Figure 1(b)
-t_continuous = linspace(-2, 55, 2000);
+t_continuous = linspace(-55, 55, 2000);
 s_t = zeros(size(t_continuous));
 
 % Reconstruct the signal: s(t) = Re( sum( c_n * exp(i * omega_n * t) ) )
@@ -59,16 +73,39 @@ xlim([-2, 55]);
 grid on;
 
 % Display the calculated coefficients in the command window
-% These should match Eq. (6) from the text:
-% c1 = -0.156 + 0.331i, c2 = -0.862 - 1.042i, c3 = 2.341 - 0.601i
-% c4 = -0.502 + 2.634i, c5 = -1.820 - 1.322i
 disp('The calculated complex coefficients c_n are:');
 for i=1:N
     fprintf('c_%d = %7.3f %+.3fi\n', i, real(amps_SO(i)), imag(amps_SO(i)));
 end
 
-amps_SO = amps_SO(:).';
-angular_freqs_SO = angular_freqs_SO(:)';
 
-save('SO_signal_data.mat', 'amps_SO', 'angular_freqs_SO');
-%load('SO_signal_data.mat', 'amps_SO', 'angular_freqs_SO');
+
+%% 6. Analytical Instantaneous Frequency Analysis
+% Preallocate arrays for the analytic signal and its derivative
+z_analytical = zeros(size(t_continuous));
+dz_analytical = zeros(size(t_continuous));
+
+% Construct the exact analytic signal z(t) and its exact derivative z'(t)
+for n = 1:N
+    term = amps_SO(n) * exp(1i * angular_freqs_SO(n) * t_continuous);
+    z_analytical = z_analytical + term;
+    dz_analytical = dz_analytical + 1i * angular_freqs_SO(n) * term;
+end
+
+% REMOVED THE NEGATIVE SIGN HERE:
+% Standard math identity: omega = Im(z' / z)
+inst_freq_analytical = imag(dz_analytical ./ z_analytical); 
+
+figure('Color', 'w', 'Name', 'Analytical Instantaneous Frequency Analysis');
+plot(t_continuous, real(z_analytical), 'LineWidth', 2, 'DisplayName', 'wave s(t)'); 
+hold on;
+plot(t_continuous, inst_freq_analytical, 'LineWidth', 2, 'DisplayName', 'Analytical \omega_{inst}(t)');
+title('SO Baranov: Wave and Analytical Instantaneous Frequency');
+xlabel('Time');
+ylim([-6 6]); 
+grid on;
+legend('Location', 'northeast');
+
+if exist('PlotUtils', 'class')
+    PlotUtils.styleAxes(gca);
+end

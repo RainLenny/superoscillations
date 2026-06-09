@@ -23,7 +23,7 @@ do_err_est = 0;
 %% SIGNALS:
 signal_scaling = 1.3;
 
-[SO_signal, angular_freqs_SO] = generate_SO_Baranov(1,signal_scaling,true,true);
+[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
 
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9,signal_scaling,true,true);
 

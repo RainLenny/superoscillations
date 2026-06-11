@@ -99,59 +99,46 @@ inst_freq_cos = compute_instantaneous_frequency(y_cos, dt_inst);
 inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_inst);
 inst_freq_rand = compute_instantaneous_frequency(y_rand, dt_inst);
 
-figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
-
-x_limits = [245, 255];
-y_limits = [-2, 4];
-
-% Subplot 1: SO
-subplot(4,1,1);
+% --- Figure 1: SO ---
+figure('Color', 'w', 'Name', 'SO: Instantaneous Frequency Analysis');
 hold on;
 plot(t_inst, real(y_so), 'LineWidth', 2, 'Color', 'r', 'DisplayName', 'wave');
 plot(t_inst, inst_freq_so, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
 title('SO: Wave and Instantaneous Frequency');
 xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
 grid on;
 legend('Location', 'northeast');
 PlotUtils.styleAxes(gca);
 
-% Subplot 2: COS
-subplot(4,1,2);
+% --- Figure 2: COS ---
+figure('Color', 'w', 'Name', 'COS: Instantaneous Frequency Analysis');
 hold on;
 plot(t_inst, real(y_cos), 'LineWidth', 2, 'Color', 'b', 'DisplayName', 'wave');
 plot(t_inst, inst_freq_cos, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
 title('COS (0.9): Wave and Instantaneous Frequency');
 xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
 grid on;
 legend('Location', 'northeast');
 PlotUtils.styleAxes(gca);
 
-% Subplot 3: FLAT
-subplot(4,1,3);
+% --- Figure 3: FLAT ---
+figure('Color', 'w', 'Name', 'Flat Spectrum: Instantaneous Frequency Analysis');
 hold on;
 plot(t_inst, real(y_flat), 'LineWidth', 2, 'Color', [0, 0.5, 0], 'DisplayName', 'wave');
 plot(t_inst, inst_freq_flat, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
 title('Flat Spectrum: Wave and Instantaneous Frequency');
 xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
 grid on;
 legend('Location', 'northeast');
 PlotUtils.styleAxes(gca);
 
-% Subplot 4: RAND PHASE
-subplot(4,1,4);
+% --- Figure 4: RAND PHASE ---
+figure('Color', 'w', 'Name', 'Rand Phase: Instantaneous Frequency Analysis');
 hold on;
 plot(t_inst, real(y_rand), 'LineWidth', 2, 'Color', 'm', 'DisplayName', 'wave');
 plot(t_inst, inst_freq_rand, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
 title('Rand Phase: Wave and Instantaneous Frequency');
 xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
 grid on;
 legend('Location', 'northeast');
 PlotUtils.styleAxes(gca);

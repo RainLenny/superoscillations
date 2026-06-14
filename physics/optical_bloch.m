@@ -32,7 +32,6 @@ dydt = @(t, y) [ ...
     -2*OmegaTilde * f_func(t) * y(2) - (y(3) - r30)/T1 ...
     ];
 
-% FIX: Enforce a MaxStep to force the solver to resolve the high-frequency carrier (~1 rad/s).
 % Tighten tolerances to strictly preserve the Bloch vector length.
 options = odeset('RelTol', 1e-9, 'AbsTol', 1e-9);
 [t, rho] = ode45(dydt, t_span, rho_init, options);

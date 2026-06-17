@@ -12,10 +12,10 @@ T = 100;
 signal_scaling = 1;
 
 % 1. Generate Superoscillatory (SO) signal
-[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
+[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Derek', 1, signal_scaling, true, false);
 
 % 2. Generate Flat spectrum signal
-[Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, true);
+[Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, false);
 
 % 3. Normalize signals together
 [SO_signal, Flat_signal] = normalize_signals({SO_signal, Flat_signal}, 'peak');

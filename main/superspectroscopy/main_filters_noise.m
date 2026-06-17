@@ -34,11 +34,7 @@ signal_scaling = 7;
 [SO_signal_Denys, angular_freqs_SO_Denys] = generate_SO_from_dat_file('SO_Denys', 1, signal_scaling, false);
 
 % Manually generate random phase signal 
-N_no_SO = length(angular_freqs_SO_Denys);
-rng(1);
-tau_rand = rand(1, N_no_SO);
-amps_no_SO = exp(-1i * angular_freqs_SO_Denys .* tau_rand) * signal_scaling;
-[SO_signal_Denys_no_SO, ~] = generate_signal_base(angular_freqs_SO_Denys, amps_no_SO, false, false);
+[SO_signal_Denys_no_SO, ~] = generate_rand_phase(angular_freqs_SO_Denys, signal_scaling * ones(size(angular_freqs_SO_Denys)), false, false, 1);
 
 [SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Denys, 1, signal_scaling, false);
 

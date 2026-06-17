@@ -31,13 +31,9 @@ signal_scaling = 1.3;
 [Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, true);
 
 % Random phase signal (like the one in main_filters_noise.m, keeping Baranov amplitudes)
-N_SO = length(angular_freqs_SO);
 data_baranov = load('SO_Baranov.mat', 'amps_SO');
 amps_baranov = data_baranov.amps_SO * signal_scaling;
-rng(1);
-tau_rand = rand(1, N_SO);
-amps_rand = abs(amps_baranov) .* exp(-1i .* tau_rand);
-[Rand_signal, ~] = generate_signal_base(angular_freqs_SO, amps_rand, true, true);
+[Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, true, 1);
 
 % Normalize all signals symbolically by the peak of the first signal
 [SO_signal, Cos_signal, Flat_signal, Rand_signal] = normalize_signals({SO_signal, Cos_signal, Flat_signal, Rand_signal}, 'peak');

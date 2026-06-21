@@ -6,6 +6,11 @@ function [varargout] = normalize_signals(signals, norm_type, t_guess)
 %   [..., Rel_N] = normalize_signals(signals, norm_type, t_guess)
 %   normalized_cell = normalize_signals(signals, ...)
 %   [S_norm, Rel_N] = normalize_signals(S, ...)
+%
+%   Supported norm_type values:
+%       'peak'   - Normalizes based on peak amplitude (default)
+%       'energy' - Normalizes based on signal energy
+%       'pass'   - Does not change the signals (returns original signals, Rel_N = 1)
 
 %% 1. Input Parsing & Standardization
 if nargin < 2 || isempty(norm_type), norm_type = 'peak'; end
@@ -27,7 +32,7 @@ elseif ~iscell(signals)
 end
 
 num_signals = length(signals);
-Raw_N = ones(1, num_signals); % Default to 1 to gracefully handle failures
+Raw_N = ones(1, num_signals); % Default to 1 to gracefully handle failures and 'pass' mode
 
 %% 2. Pre-allocation & Strategy Setup
 norm_type = lower(norm_type);
@@ -36,15 +41,18 @@ if strcmp(norm_type, 'peak')
     options = optimset('Display', 'off', 'TolX', 1e-10);
     % Pre-generate grid once outside the loop to save overhead
     t_samples = linspace(t_search(1), t_search(2), 100000);
-elseif ~strcmp(norm_type, 'energy')
-    error('Unknown norm_type: ''%s''. Please use ''peak'' or ''energy''.', norm_type);
+elseif ~strcmp(norm_type, 'energy') && ~strcmp(norm_type, 'pass')
+    error('Unknown norm_type: ''%s''. Please use ''peak'', ''energy'', or ''pass''.', norm_type);
 end
 
 %% 3. Normalization Calculation
 for i = 1:num_signals
     S = signals{i};
 
-    if strcmp(norm_type, 'peak')
+    if strcmp(norm_type, 'pass')
+        % Keep Raw_N(i) = 1 to pass the signal through unchanged
+        continue;
+    elseif strcmp(norm_type, 'peak')
         % 1. Global search via dense sampling
         try
             samp_vals = abs(S(t_samples));

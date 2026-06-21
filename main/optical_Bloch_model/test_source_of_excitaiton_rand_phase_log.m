@@ -2,7 +2,11 @@
 clear; clc; close all;
 
 %% SETTINGS FOR PARAMETER SWEEP
-OmegaTilde_array = linspace(0.001, 0.004, 35); % Array of signal magnitudes to test
+% Logarithmically spaced array from 0.001 to 0.05
+OmegaTilde_array = logspace(log10(0.001), log10(0.02), 35*2); 
+% Alternatively, keep your original linear spacing:
+% OmegaTilde_array = linspace(0.001, 0.05, 25); 
+
 num_rng_seeds = 20; % Number of random phases for Rand signal
 
 %% CONSTANTS
@@ -12,19 +16,15 @@ rho_init = [0; 0; -1]; % Inital conditions of the TLS
 params.T1         = 500;
 params.T2         = 300;
 params.rho30      = -1.0; % Value to which the system relaxes to
-
 T_final = 600;
 dt = 0.01;
 t_grid = (0:dt:T_final)';
 
 %% BASE SIGNALS SETUP
 signal_scaling = 7;
-
 [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, false);
-
 % Flat spectrum signal with same frequencies
 [Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, false);
-
 N_SO = length(angular_freqs_SO);
 data_baranov = load('SO_Baranov.mat', 'amps_SO');
 amps_baranov = data_baranov.amps_SO * signal_scaling;
@@ -36,7 +36,6 @@ max_Pe_RAND = zeros(length(OmegaTilde_array), num_rng_seeds);
 
 %% DYNAMICS COMPUTATION
 fprintf('Starting parameter sweep over OmegaTilde...\n');
-
 for i = 1:length(OmegaTilde_array)
     fprintf('Computing for OmegaTilde = %.4f (%d/%d)\n', OmegaTilde_array(i), i, length(OmegaTilde_array));
     
@@ -47,7 +46,7 @@ for i = 1:length(OmegaTilde_array)
         [Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, false, seed);
         
         % Normalize signals symbolically by the peak of the first signal (SO)
-        [SO_norm, Flat_norm, Rand_norm] = normalize_signals({SO_signal, Flat_signal, Rand_signal}, 'energy');
+        [SO_norm, Flat_norm, Rand_norm] = normalize_signals({SO_signal, Flat_signal, Rand_signal}, 'pass');
         
         % For seed == 1, compute SO and Flat
         if seed == 1
@@ -68,12 +67,10 @@ for i = 1:length(OmegaTilde_array)
         max_Pe_RAND(i, seed) = max(Pe_RAND);
     end
 end
-
 fprintf('Computation finished.\n');
 
 %% PLOTS
 PlotUtils.setupDefaults();
-
 figure('Color', 'w', 'Name', 'Maximal Excitation Comparison');
 hold on;
 
@@ -96,6 +93,9 @@ end
 
 % Plot mean of Rand Phase
 plot(OmegaTilde_array, mean_RAND, '--', 'Color', 'm', 'LineWidth', 4, 'DisplayName', '\textbf{Rand Phase (Mean)}');
+
+% Set the x-axis to logarithmic scale
+set(gca, 'XScale', 'log'); 
 
 grid on;
 xlabel('\textbf{Signal Magnitude}');

@@ -33,7 +33,7 @@ signal_scaling = 7;
 % Random phase signal (keeping Baranov amplitudes but with random phase, real-valued)
 data_baranov = load('SO_Baranov.mat', 'amps_SO');
 amps_baranov = data_baranov.amps_SO * signal_scaling;
-[Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, false, 1);
+[Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, false, 3);
 
 % Normalize all signals symbolically by the peak of the first signal
 [SO_signal, Cos_signal, Flat_signal, Rand_signal] = normalize_signals({SO_signal, Cos_signal, Flat_signal, Rand_signal}, 'peak');

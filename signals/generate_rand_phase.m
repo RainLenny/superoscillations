@@ -28,7 +28,7 @@ function [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, inpu
     N_SO = length(angular_freqs_SO);
     
     rng(random_seed);
-    tau_rand = rand(1, N_SO);
+    tau_rand = 2*pi*rand(1, N_SO);
     amps_rand = abs(input_amps) .* exp(-1i .* tau_rand);
     
     [Rand_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_rand, use_gaussian, use_conj);

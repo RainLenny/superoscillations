@@ -1,8 +1,7 @@
 %% PATH SETUP & CONSTANTS
 clear; clc;
-% Add all project subfolders to search path
-addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 
+NEED TO CALIBRATE THE LAMBDA SYSTEM FOR THE FREQUENCIES OF THE SIGNAL!!!!!!!!!
 %% CONSTANTS
 T_final = 500;
 t_0 = 250;

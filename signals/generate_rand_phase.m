@@ -1,4 +1,4 @@
-function [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, input_amps, use_gaussian, use_conj, random_seed)
+function [Rand_signal, angular_freqs_SO, amps_rand] = generate_rand_phase(input_freqs, input_amps, use_gaussian, use_conj, random_seed)
 %GENERATE_RAND_PHASE Generate a signal with given amplitudes/frequencies but random phase
 %
 %   [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, input_amps, use_gaussian, use_conj, random_seed)
@@ -31,6 +31,6 @@ function [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, inpu
     tau_rand = 2*pi*rand(1, N_SO);
     amps_rand = abs(input_amps) .* exp(-1i .* tau_rand);
     
-    [Rand_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_rand, use_gaussian, use_conj);
+    [Rand_signal, angular_freqs_SO , amps_rand] = generate_signal_base(angular_freqs_SO, amps_rand, use_gaussian, use_conj);
 
 end

@@ -1,4 +1,4 @@
-function [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file(dat_file_name, freq_scaling, amp_scaling, use_gaussian, use_conj)
+function [SO_signal, angular_freqs_SO, amps_SO] = generate_SO_from_dat_file(dat_file_name, freq_scaling, amp_scaling, use_gaussian, use_conj)
 %GENERATE_SO_FROM_DAT_FILE Generate the Superoscillating (SO) signal from a .mat data file.
 %
 %   [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file(dat_file_name, freq_scaling, amp_scaling, use_gaussian, use_conj)
@@ -72,6 +72,6 @@ function [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file(dat_file_name
     amps_SO = data.amps_SO * amp_scaling;
     angular_freqs_SO = data.angular_freqs_SO * freq_scaling;
 
-    [SO_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
+    [SO_signal, angular_freqs_SO, amps_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
 
 end

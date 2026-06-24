@@ -1,22 +1,22 @@
+clear; clc;
 %% Importing signals
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
 [VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true);
-[VinCosFun_comp_unscaled, angular_freqs_COS] = generate_Cos_reference(0.7, -1, true);
+[VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(0.9, -1, true);
 
-% Scale Cos_signal symbolically to match the peak of SO_signal
-[~, peak_SO] = normalize_signals(VinSOFun_comp, 'peak');
-[~, peak_COS] = normalize_signals(VinCosFun_comp_unscaled, 'peak');
-scale_factor = peak_SO / peak_COS;
 
-[VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(0.7, -scale_factor, true);
 
-% Normalize both signals symbolically by the peak of the first signal
-[VinSOFun_comp, VinCosFun_comp] = normalize_signals({VinSOFun_comp, VinCosFun_comp}, 'peak');
+% Normalize both signals symbolically by the peak of the first signal (using version with Gaussian envelope)
+[VinSOFun_comp,VinCosFun_comp] = normalize_signals({VinSOFun_comp,VinCosFun_comp}, 'peak');
+
+
 
 VinSOFun = @(t) real(VinSOFun_comp(t));
 VinCosFun = @(t) real(VinCosFun_comp(t));
+
+
 
 
 %% SAMPLING Constants
@@ -69,7 +69,7 @@ h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'DisplayName', '\t
 
 % 2. Vertical reference line & Annotation
 xline(1.0, 'Color', 'black', 'LineWidth', 4);
-text(1, 4.5e-3, '\boldmath$\mathbf{\omega_0}$', ...
+text(1, 50e-3, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
 
@@ -80,7 +80,7 @@ ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
 % 4. Legend and Limits
 legend([h1, h2]);
 xlim([0, 1.1]);
-ylim([0, 4e-2]);
+% ylim([0, 4e-2]);
 
 % 5. Axis Formatting (Scales y by 1e3 and adds top-left exponent \times 10^{-3})
 PlotUtils.styleAxes(gca, 1e3);

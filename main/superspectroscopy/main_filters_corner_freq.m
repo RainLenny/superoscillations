@@ -258,27 +258,7 @@ legend('Location', 'best', 'Interpreter', 'latex');
 xlim([-2 2]);
 
 % --- Plot Wave and Instantaneous Frequency (d_angle/dt) ---
-figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
-
 x_limits = [-5 5];
 y_limits = [-4 5];
-num_sigs = length(sig_configs);
+plot_instantaneous_frequency(sig_configs, t_common, x_limits, y_limits);
 
-for i = 1:num_sigs
-    y_sig = arrayfun(sig_configs(i).data, t_common);
-    inst_freq = compute_instantaneous_frequency(y_sig, dt_common);
-    
-    subplot(num_sigs, 1, i);
-    hold on;
-    plot(t_common, y_sig, 'Color', sig_configs(i).color, 'LineWidth', 2, 'DisplayName', 'wave');
-    plot(t_common, inst_freq, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
-    title(sprintf('%s: Wave and Instantaneous Frequency', sig_configs(i).name));
-    xlabel('time');
-    xlim(x_limits);
-    ylim(y_limits);
-    grid on;
-    legend('Location', 'northeast');
-    if exist('PlotUtils', 'class')
-        PlotUtils.styleAxes(gca);
-    end
-end

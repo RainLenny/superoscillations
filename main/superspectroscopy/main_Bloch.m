@@ -27,29 +27,37 @@ signal_scaling = 7;
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
 [Cos_resonant_signal, angular_freqs_COS_resonant] = generate_Cos_reference(1);
 
-% Normalize both signals symbolically by the peak of the first signal
-norm_sigs = normalize_signals({SO_signal_Baranov, SO_signal_flat, Cos_signal,Cos_resonant_signal}, 'peak');
-
-% Generate distinct colors for plotting
-
-% Initialize the signals struct array
-signals = struct('name', {}, 'data', {}, 'rho_tls1', {}, 'rho_tls2', {}, 'J', {});
+sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
 % --- Add Signal 1 ---
-signals(1).name = '\textbf{SO Baranov}';
-signals(1).data    = norm_sigs{1};
+sig_configs(1).name = '\textbf{SO Baranov}';
+sig_configs(1).data = SO_signal_Baranov;
+sig_configs(1).freqs = angular_freqs_SO_Baranov;
 
 % --- Add Signal 2 ---
-signals(2).name = '\textbf{flat spectrum}';
-signals(2).data    = norm_sigs{2};
+sig_configs(2).name = '\textbf{flat spectrum}';
+sig_configs(2).data = SO_signal_flat;
+sig_configs(2).freqs = angular_freqs_SO_flat;
 
 % --- Add Signal 3 ---
-signals(3).name = '\boldmath$\mathrm{0.9\omega_0}$';
-signals(3).data    = norm_sigs{3};
+sig_configs(3).name = '\boldmath$\mathrm{0.9\omega_0}$';
+sig_configs(3).data = Cos_signal;
+sig_configs(3).freqs = angular_freqs_COS;
 
 % --- Add Signal 4 ---
-signals(4).name = '\boldmath$\mathrm{\omega_0}$';
-signals(4).data    = norm_sigs{4};
+sig_configs(4).name = '\boldmath$\mathrm{\omega_0}$';
+sig_configs(4).data = Cos_resonant_signal;
+sig_configs(4).freqs = angular_freqs_COS_resonant;
+
+% Normalize both signals symbolically by the peak of the first signal
+sigs = {sig_configs.data};
+[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
+for i = 1:length(sig_configs)
+    sig_configs(i).data = norm_sigs{i};
+end
+
+% Apply defaults (auto-colors)
+sig_configs = prepare_signal_config(sig_configs);
 
 %% 4. Main Processing Loop
 % FIX: Ensure dt is small enough to capture the 30 rad/s high-frequency components
@@ -64,22 +72,22 @@ if isempty(idx_start), idx_start = 1; end
 % Time axis for J plots (T2)
 t_axis = t_common(idx_start:end);
 
-for i = 1:length(signals)
-    disp(['Processing ' signals(i).name '...']);
+for i = 1:length(sig_configs)
+    disp(['Processing ' sig_configs(i).name '...']);
 
     % --- Run Solver (Pass t_common directly to avoid pchip interpolation) ---
-    [~, rho_out1] = optical_bloch(t_common, rho_init, nu0_TLS1, params, signals(i).data);
-    [~, rho_out2] = optical_bloch(t_common, rho_init, nu0_TLS2, params, signals(i).data);
+    [~, rho_out1] = optical_bloch(t_common, rho_init, nu0_TLS1, params, sig_configs(i).data);
+    [~, rho_out2] = optical_bloch(t_common, rho_init, nu0_TLS2, params, sig_configs(i).data);
 
-    signals(i).rho_tls1 = rho_out1; 
-    signals(i).rho_tls2 = rho_out2; 
+    sig_configs(i).rho_tls1 = rho_out1; 
+    sig_configs(i).rho_tls2 = rho_out2; 
 
     % --- Calculate J for each component (rho1, rho2, rho3) ---
     J_vals = zeros(length(t_axis), 3); 
 
     for comp = 1:3
-        r1 = signals(i).rho_tls1(:, comp);
-        r2 = signals(i).rho_tls2(:, comp);
+        r1 = sig_configs(i).rho_tls1(:, comp);
+        r2 = sig_configs(i).rho_tls2(:, comp);
 
         numerator_integrand   = (r1 - r2).^2;
         denominator_integrand = 0.5 * (r1.^2 + r2.^2);
@@ -93,7 +101,7 @@ for i = 1:length(signals)
         J_vals(:, comp) = num_int ./ den_int;
     end
 
-    signals(i).J = J_vals; 
+    sig_configs(i).J = J_vals; 
 end
 %% 5. Plotting
 component_labels = {'\rho_1', '\rho_2', '\rho_3'};
@@ -107,9 +115,9 @@ for comp = 1:3
     figure('Color', 'w', 'Name', ['J for ' component_labels{comp}]);
     hold on;
 
-    for i = 1:length(signals)
-        plot(t_axis, signals(i).J(:, comp), 'LineWidth', lw, ...
-             'DisplayName', signals(i).name);
+    for i = 1:length(sig_configs)
+        plot(t_axis, sig_configs(i).J(:, comp), 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+             'DisplayName', sig_configs(i).name);
     end
 
     title(['Distinguishability J for ' component_labels{comp}]);
@@ -126,17 +134,17 @@ for comp = 1:3
     figure('Color', 'w', 'Name', ['rho for ' component_labels{comp}]);
     hold on;
 
-    for i = 1:length(signals)
-        r_tls1 = signals(i).rho_tls1(:, comp);
-        r_tls2 = signals(i).rho_tls2(:, comp);
+    for i = 1:length(sig_configs)
+        r_tls1 = sig_configs(i).rho_tls1(:, comp);
+        r_tls2 = sig_configs(i).rho_tls2(:, comp);
 
         % Solid line for TLS1, matching signal color
-        plot(t_common, r_tls1, 'LineWidth', lw, ...
-            'DisplayName', sprintf('%s (TLS1)', signals(i).name));
+        plot(t_common, r_tls1, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+            'DisplayName', sprintf('%s (TLS1)', sig_configs(i).name));
         
         % Dashed line for TLS2, matching signal color
-        plot(t_common, r_tls2, '--', 'LineWidth', lw, ...
-            'DisplayName', sprintf('%s (TLS2)', signals(i).name));
+        plot(t_common, r_tls2, '--', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+            'DisplayName', sprintf('%s (TLS2)', sig_configs(i).name));
     end
 
     title(['Time-domain trajectories for ' component_labels{comp}]);
@@ -151,10 +159,10 @@ end
 figure('Color', 'w', 'Name', 'Input Signals (Time)');
 hold on;
 
-for i = 1:length(signals)
-    f_vals = arrayfun(signals(i).data, t_common);
-    plot(t_common, f_vals, 'LineWidth', lw, ...
-        'DisplayName', signals(i).name);
+for i = 1:length(sig_configs)
+    f_vals = arrayfun(sig_configs(i).data, t_common);
+    plot(t_common, f_vals, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
 end
 
 xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$', 'Interpreter', 'latex');
@@ -171,7 +179,11 @@ end
 % SAMPLING Constants
 f_sampling = 60/(2*pi);
 % Calculate fundamental period of all aggregated frequencies
-T_period = compute_fundamental_period([angular_freqs_SO_flat, angular_freqs_COS], f_sampling);
+all_freqs = [];
+for i = 1:length(sig_configs)
+    all_freqs = [all_freqs, sig_configs(i).freqs];
+end
+T_period = compute_fundamental_period(all_freqs, f_sampling);
 signals_duration = T_period * 100; % total duration to simulate
 dt = 1 / f_sampling; % sample-interval in seconds
 
@@ -186,15 +198,15 @@ freq_axis = linspace(-f_sampling/2, f_sampling/2, N_fft) * 2 * pi; % Frequency a
 figure('Color', 'w', 'Name', 'Input Signals (FFT)');
 hold on;
 
-for i = 1:length(signals)
+for i = 1:length(sig_configs)
     % Evaluate signal function over the dedicated FFT time axis
-    sampled_signal = arrayfun(signals(i).data, t_axis_fft);
+    sampled_signal = arrayfun(sig_configs(i).data, t_axis_fft);
     
     % Compute FFT
     fft_mag = fftshift(abs(fft(sampled_signal, N_fft))) / N_fft;
     
-    plot(freq_axis, fft_mag, '-', 'LineWidth', lw, ...
-        'DisplayName', signals(i).name);
+    plot(freq_axis, fft_mag, '-', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
 end
 
 xlabel('\boldmath$\mathrm{Angular \ frequency \ [\omega_0]}$', 'Interpreter', 'latex');

@@ -15,10 +15,6 @@ max_window_length =7; % Total window size in time units (e.g., seconds)
 filter_order = 4;
 ripple_dB = 0.5; % Peak-to-peak passband ripple in dB
 
-% % The transition frequency is set around 0.7 to 1.0 rad/s
-% wc1 = 2; % Cutoff frequency for Filter 1 (rad/s)
-% wc2 = 2.01; % Cutoff frequency for Filter 2 (rad/s)
-
 % The transition frequency is set around 0.7 to 1.0 rad/s
 wc1 = 3; % Cutoff frequency for Filter 1 (rad/s)
 wc2 = 3.05; % Cutoff frequency for Filter 2 (rad/s)
@@ -46,29 +42,41 @@ signal_scaling = 7;
 cut_window = @(t) 1 - exp(-(t/3.5).^6); 
 SO_signal_Denys_cut = @(t) SO_signal_Denys(t) .* cut_window(t);
 
-[Cos_signal_9, ~] = generate_Cos_reference(0.9, 1, false);
+[Cos_signal_9, angular_freqs_COS] = generate_Cos_reference(0.9, 1, false);
 
-% Normalize both signals symbolically by the peak of the first signal
-norm_sigs = normalize_signals({SO_signal_Denys, SO_signal_Denys_cut, SO_signal_Denys_no_SO, SO_signal_flat, Cos_signal_9}, 'peak');
-
-% Initialize the signals struct array
-signals = struct('name', {}, 'data', {}, 'y_filt1', {}, 'y_filt2', {}, 'J', {});
+sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
 % --- Add Signals ---
-signals(1).name = '\textbf{SO Denys}';
-signals(1).data = norm_sigs{1};
+sig_configs(1).name = '\textbf{SO Denys}';
+sig_configs(1).data = SO_signal_Denys;
+sig_configs(1).freqs = angular_freqs_SO_Denys;
 
-signals(2).name = '\textbf{SO Denys (Cut Center)}';
-signals(2).data = norm_sigs{2};
+sig_configs(2).name = '\textbf{SO Denys (Cut Center)}';
+sig_configs(2).data = SO_signal_Denys_cut;
+sig_configs(2).freqs = angular_freqs_SO_Denys;
 
-signals(3).name = '\textbf{SO Denys (random phase)}';
-signals(3).data = norm_sigs{3};
+sig_configs(3).name = '\textbf{SO Denys (random phase)}';
+sig_configs(3).data = SO_signal_Denys_no_SO;
+sig_configs(3).freqs = angular_freqs_SO_Denys;
 
-signals(4).name = '\textbf{flat spectrum}';
-signals(4).data = norm_sigs{4};
+sig_configs(4).name = '\textbf{flat spectrum}';
+sig_configs(4).data = SO_signal_flat;
+sig_configs(4).freqs = angular_freqs_SO_Denys;
 
-signals(5).name = '\boldmath$\mathrm{0.9}$';
-signals(5).data = norm_sigs{5};
+sig_configs(5).name = '\boldmath$\mathrm{0.9\omega_0}$';
+sig_configs(5).data = Cos_signal_9;
+sig_configs(5).freqs = angular_freqs_COS;
+
+% Normalize both signals symbolically by the peak of the first signal
+sigs = {sig_configs.data};
+[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
+for i = 1:length(sig_configs)
+    sig_configs(i).data = norm_sigs{i};
+end
+
+% Apply defaults (auto-colors)
+sig_configs = prepare_signal_config(sig_configs);
+
 %% 4. Main Processing Loop
 dt_common = 0.001;
 t_common = (t_span(1):dt_common:t_span(2))';
@@ -97,19 +105,19 @@ window_sizes = 2 * (0:max_k)' * dt_common;
 left_indices = idx_center - (0:max_k)';
 right_indices = idx_center + (0:max_k)';
 
-for i = 1:length(signals)
-    disp(['Processing ' signals(i).name '...']);
+for i = 1:length(sig_configs)
+    disp(['Processing ' sig_configs(i).name '...']);
 
     % Evaluate input signal over common time axis
-    u_in = arrayfun(signals(i).data, t_common);
+    u_in = arrayfun(sig_configs(i).data, t_common);
 
     % --- Run Filter Simulation (Linear Simulation) ---
     % Simulating the continuous-time filters with the input signal
     y1 = lsim(sys1, u_in, t_common);
     y2 = lsim(sys2, u_in, t_common);
 
-    signals(i).y_filt1 = y1; 
-    signals(i).y_filt2 = y2; 
+    sig_configs(i).y_filt1 = y1; 
+    sig_configs(i).y_filt2 = y2; 
 
     % --- Calculate J for the filter outputs ---
     numerator_integrand   = (y1 - y2).^2;
@@ -127,7 +135,7 @@ for i = 1:length(signals)
     % Prevent division by zero
     den_int(den_int == 0) = eps;
 
-    signals(i).J = num_int ./ den_int; 
+    sig_configs(i).J = num_int ./ den_int; 
 end
 
 %% 5. Plotting
@@ -141,9 +149,9 @@ lw = 5.0;
 % --- Plot J separately (1 figure since it's 1D data now) ---
 figure('Color', 'w', 'Name', 'Distinguishability J');
 hold on;
-for i = 1:length(signals)
-    plot(window_sizes, signals(i).J, 'LineWidth', lw, ...
-         'DisplayName', signals(i).name);
+for i = 1:length(sig_configs)
+    plot(window_sizes, sig_configs(i).J, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+         'DisplayName', sig_configs(i).name);
 end
 title('Distinguishability J for Filter Outputs');
 xlabel('Observation Window');
@@ -156,14 +164,14 @@ xlim([0 max_window_length]);
 % --- Plot filter outputs in a separate figure ---
 figure('Color', 'w', 'Name', 'Filter Outputs');
 hold on;
-for i = 1:length(signals)
+for i = 1:length(sig_configs)
     % Solid line for Filter 1
-    plot(t_common, signals(i).y_filt1, 'LineWidth', lw, ...
-        'DisplayName', sprintf('%s (Filter 1)', signals(i).name));
+    plot(t_common, sig_configs(i).y_filt1, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sprintf('%s (Filter 1)', sig_configs(i).name));
     
     % Dashed line for Filter 2
-    plot(t_common, signals(i).y_filt2, '--', 'LineWidth', lw, ...
-        'DisplayName', sprintf('%s (Filter 2)', signals(i).name));
+    plot(t_common, sig_configs(i).y_filt2, '--', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sprintf('%s (Filter 2)', sig_configs(i).name));
 end
 title('Time-domain trajectories of Filter Outputs');
 xlabel('Time t');
@@ -176,10 +184,10 @@ xlim(t_span);
 % --- Plot all input signals (Time Domain) ---
 figure('Color', 'w', 'Name', 'Input Signals (Time)');
 hold on;
-for i = 1:length(signals)
-    f_vals = arrayfun(signals(i).data, t_common);
-    plot(t_common, f_vals, 'LineWidth', lw, ...
-        'DisplayName', signals(i).name);
+for i = 1:length(sig_configs)
+    f_vals = arrayfun(sig_configs(i).data, t_common);
+    plot(t_common, f_vals, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
 end
 xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$', 'Interpreter', 'latex');
 ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
@@ -197,7 +205,11 @@ end
 f_sampling = 60/(2*pi);
 
 % Calculate fundamental period of all aggregated frequencies
-T_period = compute_fundamental_period([angular_freqs_SO_Denys], f_sampling);
+all_freqs = [];
+for i = 1:length(sig_configs)
+    all_freqs = [all_freqs, sig_configs(i).freqs];
+end
+T_period = compute_fundamental_period(all_freqs, f_sampling);
 signals_duration = T_period * 100; % total duration to simulate
 dt = 1 / f_sampling; % sample-interval in seconds
 
@@ -213,15 +225,15 @@ figure('Color', 'w', 'Name', 'Input Signals & Filters (FFT)');
 hold on;
 
 % 1. Plot the FFT magnitudes of the input signals (Styled like main_Bloch.m)
-for i = 1:length(signals)
+for i = 1:length(sig_configs)
     % Evaluate signal function over the dedicated FFT time axis
-    sampled_signal = arrayfun(signals(i).data, t_axis_fft);
+    sampled_signal = arrayfun(sig_configs(i).data, t_axis_fft);
     
     % Compute FFT
     fft_mag = fftshift(abs(fft(sampled_signal, N_fft))) / N_fft;
     
-    plot(freq_axis, fft_mag, '-', 'LineWidth', lw, ...
-        'DisplayName', signals(i).name);
+    plot(freq_axis, fft_mag, '-', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
 end
 
 % 2. Calculate and plot the Filter Frequency Responses
@@ -248,48 +260,25 @@ xlim([-2 2]);
 % --- Plot Wave and Instantaneous Frequency (d_angle/dt) ---
 figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
 
-% Extract the time-domain data for the first four signals 
-y_denys   = arrayfun(signals(1).data, t_common);
-y_denys_cut = arrayfun(signals(2).data, t_common);
-y_denys_no_SO = arrayfun(signals(3).data, t_common);
-y_flat    = arrayfun(signals(4).data, t_common);
-
-% Compute instantaneous frequency for each signal using the refactored function
-inst_freq_denys = compute_instantaneous_frequency(y_denys, dt_common);
-inst_freq_denys_cut = compute_instantaneous_frequency(y_denys_cut, dt_common);
-inst_freq_denys_no_SO = compute_instantaneous_frequency(y_denys_no_SO, dt_common);
-inst_freq_flat = compute_instantaneous_frequency(y_flat, dt_common);
-
-% Create visual limits similar to the provided reference image
 x_limits = [-5 5];
 y_limits = [-4 5];
+num_sigs = length(sig_configs);
 
-% Subplot 1: SO Denys
-subplot(2,1,1);
-hold on;
-plot(t_common, y_denys, 'LineWidth', 2, 'DisplayName', 'wave');
-plot(t_common, inst_freq_denys, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
-title('SO Denys: Wave and Instantaneous Frequency');
-xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
-grid on;
-legend('Location', 'northeast');
-if exist('PlotUtils', 'class')
-    PlotUtils.styleAxes(gca);
-end
-
-% Subplot 2: SO Denys (Cut Center)
-subplot(2,1,2);
-hold on;
-plot(t_common, y_denys_cut, 'LineWidth', 2, 'DisplayName', 'wave');
-plot(t_common, inst_freq_denys_cut, 'LineWidth', 2, 'DisplayName', 'd\_angle/dt');
-title('SO Denys (Cut Center): Wave and Instantaneous Frequency');
-xlabel('time');
-xlim(x_limits);
-ylim(y_limits);
-grid on;
-legend('Location', 'northeast');
-if exist('PlotUtils', 'class')
-    PlotUtils.styleAxes(gca);
+for i = 1:num_sigs
+    y_sig = arrayfun(sig_configs(i).data, t_common);
+    inst_freq = compute_instantaneous_frequency(y_sig, dt_common);
+    
+    subplot(num_sigs, 1, i);
+    hold on;
+    plot(t_common, y_sig, 'Color', sig_configs(i).color, 'LineWidth', 2, 'DisplayName', 'wave');
+    plot(t_common, inst_freq, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
+    title(sprintf('%s: Wave and Instantaneous Frequency', sig_configs(i).name));
+    xlabel('time');
+    xlim(x_limits);
+    ylim(y_limits);
+    grid on;
+    legend('Location', 'northeast');
+    if exist('PlotUtils', 'class')
+        PlotUtils.styleAxes(gca);
+    end
 end

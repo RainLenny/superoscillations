@@ -20,23 +20,57 @@ params.OmegaTilde = 0.01; %Field-TLS coupling
 
 T_final = 600;
 
-%% SIGNALS:
+%% 1. Define Signals
 signal_scaling = 7;
 
 [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, false);
-
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9, signal_scaling, true, false);
-
-% Flat spectrum signal with same frequencies
 [Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, false);
 
-% Random phase signal (keeping Baranov amplitudes but with random phase, real-valued)
 data_baranov = load('SO_Baranov.mat', 'amps_SO');
 amps_baranov = data_baranov.amps_SO * signal_scaling;
 [Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, false, 3);
 
+sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {}, 'marker', {});
+
+% --- Signal 1: SO ---
+sig_configs(1).name = '\textbf{SO}';
+sig_configs(1).data = SO_signal;
+sig_configs(1).color = 'r';
+sig_configs(1).freqs = angular_freqs_SO;
+sig_configs(1).marker = 'o-';
+
+% --- Signal 2: COS ---
+sig_configs(2).name = '\boldmath$\mathrm{0.9\omega_0}$';
+sig_configs(2).data = Cos_signal;
+sig_configs(2).color = 'b';
+sig_configs(2).freqs = angular_freqs_COS;
+sig_configs(2).marker = 's-';
+
+% --- Signal 3: Flat ---
+sig_configs(3).name = '\textbf{Flat}';
+sig_configs(3).data = Flat_signal;
+sig_configs(3).color = [0, 0.5, 0];
+sig_configs(3).freqs = angular_freqs_SO;
+sig_configs(3).marker = 'd-';
+
+% --- Signal 4: Rand Phase ---
+sig_configs(4).name = '\textbf{Rand Phase}';
+sig_configs(4).data = Rand_signal;
+sig_configs(4).color = 'm';
+sig_configs(4).freqs = angular_freqs_SO;
+sig_configs(4).marker = '^-';
+
 % Normalize all signals symbolically by the peak of the first signal
-[SO_signal, Cos_signal, Flat_signal, Rand_signal] = normalize_signals({SO_signal, Cos_signal, Flat_signal, Rand_signal}, 'peak');
+sigs = {sig_configs.data};
+[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
+for i = 1:length(sig_configs)
+    sig_configs(i).data = norm_sigs{i};
+end
+
+% Apply defaults (auto-colors)
+sig_configs = prepare_signal_config(sig_configs);
+
 
 %% Dynamics computation
 dt = 0.01;
@@ -44,34 +78,23 @@ t_grid = (0:dt:T_final)';
 
 % We test different scaling factors lambda
 lambdas = logspace(-2, 1, 20); % Range of lambda values
-Pe_max_SO   = zeros(size(lambdas));
-Pe_max_COS  = zeros(size(lambdas));
-Pe_max_FLAT = zeros(size(lambdas));
-Pe_max_RAND = zeros(size(lambdas));
 
-for i = 1:length(lambdas)
-    lambda = lambdas(i);
+for i = 1:length(sig_configs)
+    sig_configs(i).Pe_max = zeros(size(lambdas));
+end
+
+for j = 1:length(lambdas)
+    lambda = lambdas(j);
     
-    % Scale the signals by lambda
-    scaled_SO   = @(t) lambda * SO_signal(t);
-    scaled_COS  = @(t) lambda * Cos_signal(t);
-    scaled_FLAT = @(t) lambda * Flat_signal(t);
-    scaled_RAND = @(t) lambda * Rand_signal(t);
-    
-    [~, rho_SO] = optical_bloch(t_grid, rho_init, nu0, params, scaled_SO);
-    Pe_max_SO(i) = max((1 + rho_SO(:, 3)) / 2);
-    
-    [~, rho_COS] = optical_bloch(t_grid, rho_init, nu0, params, scaled_COS);
-    Pe_max_COS(i) = max((1 + rho_COS(:, 3)) / 2);
-    
-    [~, rho_FLAT] = optical_bloch(t_grid, rho_init, nu0, params, scaled_FLAT);
-    Pe_max_FLAT(i) = max((1 + rho_FLAT(:, 3)) / 2);
-    
-    [~, rho_RAND] = optical_bloch(t_grid, rho_init, nu0, params, scaled_RAND);
-    Pe_max_RAND(i) = max((1 + rho_RAND(:, 3)) / 2);
+    for i = 1:length(sig_configs)
+        % Scale the signal by lambda
+        scaled_signal = @(t) lambda * sig_configs(i).data(t);
+        
+        [~, rho_out] = optical_bloch(t_grid, rho_init, nu0, params, scaled_signal);
+        sig_configs(i).Pe_max(j) = max((1 + rho_out(:, 3)) / 2);
+    end
 
     fprintf('Completed lambda = %.2f\n', lambda);
-
 end
 
 
@@ -80,17 +103,17 @@ PlotUtils.setupDefaults();
 
 % --- Figure 1: Amplitude Scaling Log-Log Plot ---
 figure('Color', 'w', 'Name', 'Amplitude Scaling Test');
-loglog(lambdas, Pe_max_SO, 'o-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'red', 'DisplayName', '\textbf{SO}');
 hold on;
-loglog(lambdas, Pe_max_COS, 's-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'blue', 'DisplayName', '\boldmath$\mathrm{0.9\omega_0}$');
-loglog(lambdas, Pe_max_FLAT, 'd-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', [0, 0.5, 0], 'DisplayName', '\textbf{Flat}');
-loglog(lambdas, Pe_max_RAND, '^-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'm', 'DisplayName', '\textbf{Rand Phase}');
+
+for i = 1:length(sig_configs)
+    loglog(lambdas, sig_configs(i).Pe_max, sig_configs(i).marker, 'LineWidth', 3, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+end
 
 % Plot reference slopes
 ref_lambda = lambdas;
-% Align references to the first index of SO for visualization
-ref_1st_order = Pe_max_SO(1) * (ref_lambda / ref_lambda(1)).^2;
-ref_3rd_order = Pe_max_SO(1) * (ref_lambda / ref_lambda(1)).^6;
+% Align references to the first index of SO (first signal) for visualization
+ref_1st_order = sig_configs(1).Pe_max(1) * (ref_lambda / ref_lambda(1)).^2;
+ref_3rd_order = sig_configs(1).Pe_max(1) * (ref_lambda / ref_lambda(1)).^6;
 
 loglog(ref_lambda, ref_1st_order, '--k', 'LineWidth', 2, 'DisplayName', '\boldmath$\propto \lambda^2$ (1st order)');
 loglog(ref_lambda, ref_3rd_order, '-.k', 'LineWidth', 2, 'DisplayName', '\boldmath$\propto \lambda^6$ (3rd order)');
@@ -110,18 +133,14 @@ PlotUtils.styleAxes(gca);
 
 % --- Figure 2: Log-Log Slopes ---
 figure('Color', 'w', 'Name', 'Log-Log Slopes');
-slope_SO = diff(log(Pe_max_SO)) ./ diff(log(lambdas));
-slope_COS = diff(log(Pe_max_COS)) ./ diff(log(lambdas));
-slope_FLAT = diff(log(Pe_max_FLAT)) ./ diff(log(lambdas));
-slope_RAND = diff(log(Pe_max_RAND)) ./ diff(log(lambdas));
+hold on;
 
 lambda_mid = exp((log(lambdas(1:end-1)) + log(lambdas(2:end))) / 2);
 
-semilogx(lambda_mid, slope_SO, 'o-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'red', 'DisplayName', '\textbf{SO}');
-hold on;
-semilogx(lambda_mid, slope_COS, 's-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'blue', 'DisplayName', '\boldmath$\mathrm{0.9\omega_0}$');
-semilogx(lambda_mid, slope_FLAT, 'd-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', [0, 0.5, 0], 'DisplayName', '\textbf{Flat}');
-semilogx(lambda_mid, slope_RAND, '^-', 'LineWidth', 3, 'MarkerSize', 8, 'Color', 'm', 'DisplayName', '\textbf{Rand Phase}');
+for i = 1:length(sig_configs)
+    slope_val = diff(log(sig_configs(i).Pe_max)) ./ diff(log(lambdas));
+    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'LineWidth', 3, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+end
 
 yline(2, '--k', 'LineWidth', 2, 'DisplayName', '1st order (slope=2)');
 yline(6, '-.k', 'LineWidth', 2, 'DisplayName', '3rd order (slope=6)');

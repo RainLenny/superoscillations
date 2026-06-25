@@ -155,6 +155,62 @@ for comp = 1:3
     xlim(t_span);
 end
 
-% --- Plot Signals ---
-plot_signals(sig_configs);
+% --- Plot all input signals (Time Domain) ---
+figure('Color', 'w', 'Name', 'Input Signals (Time)');
+hold on;
 
+for i = 1:length(sig_configs)
+    f_vals = arrayfun(sig_configs(i).data, t_common);
+    plot(t_common, f_vals, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
+end
+
+xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$', 'Interpreter', 'latex');
+ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
+title('Time-domain comparison of all input signals');
+grid on;
+legend('Location', 'best', 'Interpreter', 'latex');
+xlim(t_span);
+if exist('PlotUtils', 'class')
+    PlotUtils.styleAxes(gca);
+end
+
+% --- Plot all input signals (Frequency Domain / FFT) ---
+% SAMPLING Constants
+f_sampling = 60/(2*pi);
+% Calculate fundamental period of all aggregated frequencies
+all_freqs = [];
+for i = 1:length(sig_configs)
+    all_freqs = [all_freqs, sig_configs(i).freqs];
+end
+T_period = compute_fundamental_period(all_freqs, f_sampling);
+signals_duration = T_period * 100; % total duration to simulate
+dt = 1 / f_sampling; % sample-interval in seconds
+
+% Setup precise FFT time axis
+t_axis_fft = -signals_duration/2 : dt : signals_duration/2;
+t_axis_fft = t_axis_fft(1:end-1);
+t_axis_fft = t_axis_fft(:);
+
+N_fft = length(t_axis_fft);
+freq_axis = linspace(-f_sampling/2, f_sampling/2, N_fft) * 2 * pi; % Frequency axis
+
+figure('Color', 'w', 'Name', 'Input Signals (FFT)');
+hold on;
+
+for i = 1:length(sig_configs)
+    % Evaluate signal function over the dedicated FFT time axis
+    sampled_signal = arrayfun(sig_configs(i).data, t_axis_fft);
+    
+    % Compute FFT
+    fft_mag = fftshift(abs(fft(sampled_signal, N_fft))) / N_fft;
+    
+    plot(freq_axis, fft_mag, '-', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
+        'DisplayName', sig_configs(i).name);
+end
+
+xlabel('\boldmath$\mathrm{Angular \ frequency \ [\omega_0]}$', 'Interpreter', 'latex');
+ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
+title('Frequency-domain comparison of all input signals');
+grid on;
+legend('Location', 'best', 'Interpreter', 'latex');

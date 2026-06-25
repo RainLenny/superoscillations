@@ -141,35 +141,34 @@ for i = 1:length(sig_configs)
 end
 
 
-% --- Figure N+2: Instantaneous Frequency Analysis ---
-% Time grid for instantaneous frequency analysis
-t_inst = linspace(200, 300, 5000)';
+% --- Figure N+2: Full Simulation Instantaneous Frequency & Excitation Analysis ---
+% Time grid expanded to cover the full duration: [0, T_final]
+t_inst = linspace(0, T_final, 30000)'; 
 dt_inst = t_inst(2) - t_inst(1);
 
 for i = 1:length(sig_configs)
-    sig_configs(i).y_inst = arrayfun(sig_configs(i).data, t_inst);
-    sig_configs(i).inst_freq = compute_instantaneous_frequency(sig_configs(i).y_inst, dt_inst);
-end
-
-figure('Color', 'w', 'Name', 'Instantaneous Frequency Analysis');
-
-x_limits = [245, 255];
-y_limits = [-2, 4];
-num_sigs = length(sig_configs);
-
-for i = 1:num_sigs
-    subplot(num_sigs, 1, i);
+    y_sig = arrayfun(sig_configs(i).data, t_inst);
+    inst_freq = compute_instantaneous_frequency(y_sig, dt_inst);
+    Pe_inst = interp1(sig_configs(i).tgrid, sig_configs(i).Pe, t_inst);
+    
+    figure('Color', 'w', 'Name', sprintf('%s: Full Analysis', sig_configs(i).name));
+    tiledlayout(2, 1, 'TileSpacing', 'compact');
+    
+    ax(1) = nexttile; 
+    plot(t_inst, Pe_inst, 'LineWidth', 2.5, 'Color', sig_configs(i).color);
+    ylabel('P_e'); title(sprintf('%s: Excitation & Instantaneous Frequency (Full Simulation)', sig_configs(i).name));
+    grid on; PlotUtils.styleAxes(gca);
+    
+    ax(2) = nexttile; 
     hold on;
-    plot(t_inst, real(sig_configs(i).y_inst), 'LineWidth', 2, 'Color', sig_configs(i).color, 'DisplayName', 'wave');
-    plot(t_inst, sig_configs(i).inst_freq, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
-    title(sprintf('%s : Wave and Instantaneous Frequency', sig_configs(i).name));
-    xlabel('time');
-    xlim(x_limits);
-    ylim(y_limits);
-    grid on;
-    legend('Location', 'northeast');
+    plot(t_inst, real(y_sig), 'LineWidth', 1.5, 'Color', sig_configs(i).color, 'DisplayName', 'wave');
+    plot(t_inst, inst_freq, 'LineWidth', 2, 'Color', [0.85, 0.33, 0.1], 'DisplayName', 'd\_angle/dt');
+    xlabel('time'); grid on; legend('Location', 'northeast');
     PlotUtils.styleAxes(gca);
+    
+    linkaxes(ax, 'x'); 
+    xlim([0, T_final]);
 end
 
-% Plot Signals
+% Call general plotting utility for the signals
 plot_signals(sig_configs);

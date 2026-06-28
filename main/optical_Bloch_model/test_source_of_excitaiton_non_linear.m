@@ -23,13 +23,11 @@ T_final = 600;
 %% 1. Define Signals
 signal_scaling = 7;
 
-[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, false);
+[SO_signal, angular_freqs_SO, amps_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, false);
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9, signal_scaling, true, false);
 [Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, false);
 
-data_baranov = load('SO_Baranov.mat', 'amps_SO');
-amps_baranov = data_baranov.amps_SO * signal_scaling;
-[Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, false, 3);
+[Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_SO, true, false, 3);
 
 sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {}, 'marker', {});
 
@@ -77,7 +75,7 @@ dt = 0.01;
 t_grid = (0:dt:T_final)';
 
 % We test different scaling factors lambda
-lambdas = logspace(-2, 1, 20); % Range of lambda values
+lambdas = logspace(-1, 0, 20); % Range of lambda values
 
 for i = 1:length(sig_configs)
     sig_configs(i).Pe_max = zeros(size(lambdas));
@@ -129,6 +127,7 @@ legend('show', 'Location', 'best');
 
 % Apply Bold LaTeX Axis Ticks
 PlotUtils.styleAxes(gca);
+set(gca, 'XScale', 'log', 'YScale', 'log'); % Enforce log scales post-styling
 
 
 % --- Figure 2: Log-Log Slopes ---
@@ -152,3 +151,4 @@ title('\textbf{Log-Log Slope vs Amplitude}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);
+set(gca, 'XScale', 'log'); % Enforce log scale post-styling

@@ -15,7 +15,7 @@ J_drive = 6;
 J_fluc  = 0.003;
 
 T_final = 500;
-nmax    = 0;
+nmax    = 6;
 
 % Control flags
 do_err_est = 0;
@@ -34,7 +34,7 @@ sig_configs(1).freqs = angular_freqs_SO;
 
 % --- Signal 2: COS ---
 [Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9, signal_scaling, true, true);
-sig_configs(2).name = '\boldmath$\mathrm{0.9\omega_0}$';
+sig_configs(2).name = '\boldmath$\mathbf{0.9\omega_0}$';
 sig_configs(2).data = Cos_signal;
 sig_configs(2).color = 'b';
 sig_configs(2).freqs = angular_freqs_COS;
@@ -46,18 +46,18 @@ sig_configs(2).freqs = angular_freqs_COS;
 % sig_configs(3).color = [0, 0.5, 0];
 % sig_configs(3).freqs = angular_freqs_SO;
 % 
-% % --- Signal 4: RAND ---
+% --- Signal 4: RAND ---
 % data_baranov = load('SO_Baranov.mat', 'amps_SO');
 % amps_baranov = data_baranov.amps_SO * signal_scaling;
-% [Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, true, 1);
-% sig_configs(4).name = '\textbf{Rand Phase}';
-% sig_configs(4).data = Rand_signal;
-% sig_configs(4).color = 'm';
-% sig_configs(4).freqs = angular_freqs_SO;
+% [Rand_signal, ~] = generate_rand_phase(angular_freqs_SO, amps_baranov, true, true, 4);
+% sig_configs(3).name = '\textbf{Rand Phase}';
+% sig_configs(3).data = Rand_signal;
+% sig_configs(3).color = 'g';
+% sig_configs(3).freqs = angular_freqs_SO;
 
 % Normalize all signals symbolically by the peak of the first signal
 sigs = {sig_configs.data};
-[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
+[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'energy');
 for i = 1:length(sig_configs)
     sig_configs(i).data = norm_sigs{i};
 end
@@ -96,8 +96,9 @@ for i = 1:length(sig_configs)
 end
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathrm{Excitation \ probability}$');
+
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+ylabel('\boldmath$\mathbf{Excitation \ probability}$');
 legend('show');
 
 % Apply Bold LaTeX Axis Ticks
@@ -111,8 +112,8 @@ for i = 1:length(sig_configs)
 end
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathrm{Excitation \ probability}$');
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+ylabel('\boldmath$\mathbf{Excitation \ probability}$');
 legend('show');
 
 % Apply Bold LaTeX Axis Ticks
@@ -126,8 +127,8 @@ for i = 1:length(sig_configs)
     plot(sig_configs(i).tgrid, sig_configs(i).ntot, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
     grid on;
 
-    xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
-    ylabel('\boldmath$\mathrm{Photon \ Number}$');
+    xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+    ylabel('\boldmath$\mathbf{Photon \ Number}$');
     title(sprintf('%s \\textbf{ Signal: Mode Photons \\& Total}', sig_configs(i).name));
 
     % Dynamically generate legend for modes in Bold LaTeX

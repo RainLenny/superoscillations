@@ -39,7 +39,7 @@ sig_configs(1).color = 'r';
 sig_configs(1).freqs = angular_freqs_SO;
 
 % --- Signal 2: COS ---
-sig_configs(2).name = '\boldmath$\mathrm{0.9\omega_0}$';
+sig_configs(2).name = '\boldmath$\mathbf{0.9\omega_0}$';
 sig_configs(2).data = Cos_signal;
 sig_configs(2).color = 'b';
 sig_configs(2).freqs = angular_freqs_COS;
@@ -88,8 +88,8 @@ for i = 1:length(sig_configs)
 end
 grid on;
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathrm{Excitation \ probability}$');
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+ylabel('\boldmath$\mathbf{Excitation \ probability}$');
 legend('show');
 
 % Apply Bold LaTeX Axis Ticks

@@ -2,8 +2,8 @@
 clear; clc; close all;
 
 %% SETTINGS FOR PARAMETER SWEEP
-OmegaTilde_array = linspace(0.005, 0.02, 50); % Array of signal magnitudes to test
-num_rng_seeds = 30; % Number of random phases for Rand signal
+OmegaTilde_array = linspace(0.001, 8e-3, 50); % Array of signal magnitudes to test
+num_rng_seeds = 40; % Number of random phases for Rand signal
 
 %% CONSTANTS
 % Physical and simulation parameters
@@ -36,21 +36,21 @@ sig_configs(1).freqs = angular_freqs_SO;
 sig_configs(1).amps = amps_SO;
 sig_configs(1).is_rand_phase = false;
 
-% --- Signal 2: Flat ---
-sig_configs(2).name = '\textbf{Flat}';
-sig_configs(2).data = Flat_signal;
-sig_configs(2).color = [0, 0.5, 0];
-sig_configs(2).freqs = angular_freqs_SO;
-sig_configs(2).amps = amps_SO;
-sig_configs(2).is_rand_phase = false;
+% % --- Signal 2: Flat ---
+% sig_configs(2).name = '\textbf{Flat}';
+% sig_configs(2).data = Flat_signal;
+% sig_configs(2).color = [0, 0.5, 0];
+% sig_configs(2).freqs = angular_freqs_SO;
+% sig_configs(2).amps = amps_SO;
+% sig_configs(2).is_rand_phase = false;
 
 % --- Signal 3: Rand Phase ---
-sig_configs(3).name = '\textbf{Rand Phase}';
-sig_configs(3).data = @(t) 0; % Dummy, generated inside loop
-sig_configs(3).color = 'm';
-sig_configs(3).freqs = angular_freqs_SO;
-sig_configs(3).amps = amps_SO;
-sig_configs(3).is_rand_phase = true;
+sig_configs(2).name = '\textbf{Rand Phase}';
+sig_configs(2).data = @(t) 0; % Dummy, generated inside loop
+sig_configs(2).color = 'm';
+sig_configs(2).freqs = angular_freqs_SO;
+sig_configs(2).amps = amps_SO;
+sig_configs(2).is_rand_phase = true;
 
 % Apply defaults (auto-colors)
 sig_configs = prepare_signal_config(sig_configs);
@@ -87,8 +87,8 @@ for j = 1:length(OmegaTilde_array)
             end
         end
         
-        % Normalize symbolically by the peak of the first signal
-        [norm_data{1:length(current_data)}] = normalize_signals(current_data, 'peak');
+        % Normalize signals
+        [norm_data{1:length(current_data)}] = normalize_signals(current_data, 'energy');
         
         % Simulate
         for i = 1:length(sig_configs)
@@ -123,14 +123,14 @@ for i = 1:length(sig_configs)
         % Plot individual random seeds as scattered lines with transparency
         for seed = 1:num_rng_seeds
             if seed == 1
-                plot(OmegaTilde_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', sprintf('%s (individual)', sig_configs(i).name));
+                plot(OmegaTilde_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
             else
                 plot(OmegaTilde_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
             end
         end
         % Plot mean
         mean_val = mean(sig_configs(i).max_Pe, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', sig_configs(i).color, 'LineWidth', 4, 'DisplayName', sprintf('%s (Mean)', sig_configs(i).name));
+        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Rand Phase (Mean)}');
     else
         plot(OmegaTilde_array, sig_configs(i).max_Pe, 'LineWidth', 4, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
@@ -139,7 +139,7 @@ end
 grid on;
 xlabel('\textbf{Signal Magnitude}');
 ylabel('\boldmath$\max(P_e)$ \textbf{(Maximal Excitation)}');
-legend('show', 'Location', 'northwest');
+legend('show', 'Location', 'northwest', 'Interpreter', 'latex');
 title('\textbf{Maximal Excitation vs. Signal Magnitude}');
 
 % Apply Bold LaTeX Axis Ticks
@@ -157,14 +157,14 @@ for i = 1:length(sig_configs)
         % Plot individual random seeds as scattered lines with transparency
         for seed = 1:num_rng_seeds
             if seed == 1
-                plot(OmegaTilde_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', sprintf('%s (individual)', sig_configs(i).name));
+                plot(OmegaTilde_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
             else
                 plot(OmegaTilde_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
             end
         end
         % Plot mean
         mean_val = mean(sig_configs(i).Pe_500, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', sig_configs(i).color, 'LineWidth', 4, 'DisplayName', sprintf('%s (Mean)', sig_configs(i).name));
+        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Rand Phase (Mean)}');
     else
         plot(OmegaTilde_array, sig_configs(i).Pe_500, 'LineWidth', 4, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
@@ -173,7 +173,7 @@ end
 grid on;
 xlabel('\textbf{Signal Magnitude}');
 ylabel('\boldmath$P_e(t=500)$ \textbf{(Excitation at t=500)}');
-legend('show', 'Location', 'northwest');
+legend('show', 'Location', 'northwest', 'Interpreter', 'latex');
 title('\textbf{Excitation at $t=500$ vs. Signal Magnitude}');
 
 % Apply Bold LaTeX Axis Ticks

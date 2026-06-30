@@ -131,7 +131,6 @@ ylabel('\boldmath$\max(P_e)$ \textbf{(Max Excitation Probability)}');
 
 ylim([-inf, 1])
 
-title('\textbf{Amplitude Scaling Test: Log-Log Plot}');
 legend('show', 'Location', 'best');
 
 % Apply Bold LaTeX Axis Ticks
@@ -156,7 +155,6 @@ yline(6, '-.k', 'LineWidth', 4, 'DisplayName', '\textbf{3rd order (slope=6)}');
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
 ylabel('\boldmath$d(\log P_e) / d(\log \lambda)$ \textbf{(Slope)}');
-title('\textbf{Log-Log Slope vs Amplitude}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);
@@ -182,7 +180,6 @@ loglog(ref_lambda, ref_3rd_order_rho, '-.k', 'LineWidth', 4, 'DisplayName', '\bo
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
 ylabel('\boldmath$\max(|\rho_1|)$');
-title('\textbf{Amplitude Scaling Test (\boldmath$\rho_1$)}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);
@@ -204,7 +201,6 @@ yline(3, '-.k', 'LineWidth', 4, 'DisplayName', ' \textbf{3rd order (slope=3)}');
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
 ylabel('\boldmath$d(\log |\rho_1|) / d(\log \lambda)$ \textbf{(Slope)}');
-title('\textbf{Log-Log Slope vs Amplitude (\boldmath$\rho_1$)}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);
@@ -229,7 +225,6 @@ loglog(ref_lambda, ref_3rd_order_rho2, '-.k', 'LineWidth', 4, 'DisplayName', '\b
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
 ylabel('\boldmath$\max(|\rho_2|)$');
-title('\textbf{Amplitude Scaling Test (\boldmath$\rho_2$)}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);
@@ -251,7 +246,6 @@ yline(3, '-.', 'LineWidth', 4, 'DisplayName', '\textbf{3rd order (slope=3)}');
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
 ylabel('\boldmath$d(\log |\rho_2|) / d(\log \lambda)$ \textbf{(Slope)}');
-title('\textbf{Log-Log Slope vs Amplitude (\boldmath$\rho_2$)}');
 legend('show', 'Location', 'best');
 
 PlotUtils.styleAxes(gca);

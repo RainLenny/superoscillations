@@ -13,7 +13,7 @@ function [tgrid, Pe, nk, ntot, eps_trunc] = multimode_JC_driven_mode_photon_cap(
 %     J               : coupling strength (scalar, assumed same for all modes)
 %     Drive_integral  : function handle representing the integral part in f(t),
 %                       used as f(t) = -1i * J * Drive_integral(t) * exp(1i*nu0*t)
-%     T_final         : final simulation time
+%     T_final         : final simulation time (scalar), or time vector to force output at those steps
 %
 %   OUTPUTS:
 %     tgrid     : time points from ODE solver
@@ -32,7 +32,12 @@ end
 %% NUMERICAL PARAMETERS for the ODE solver
 RelTol = 1e-9;
 AbsTol = 1e-9;
-tspan  = [0, T_final];
+if isscalar(T_final)
+    tspan  = [0, T_final];
+else
+    tspan  = T_final;
+    T_final = tspan(end); % Redefine for the output function
+end
 
 %% SYSTEM PARAMETERS
 omega = omega(:).';
@@ -125,7 +130,7 @@ ntot = sum(nk, 2);
 %% ERROR ESTIMATION (RECURSIVE CALL)
 if do_err_est
     fprintf('Calculating truncation error (running with nmax+1)...\n');
-    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe);
+    eps_trunc = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, tgrid, Pe);
     fprintf('Numerical error estimate using nmax+1: %.3e\n', eps_trunc);
 else
     % If this IS the error check run, we don't calculate an error on top of it
@@ -136,16 +141,14 @@ end
 
 %% ======================= LOCAL FUNCTIONS =======================
 
-function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
+function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, t_orig, Pe_orig)
 % The last argument 'false' prevents infinite recursion. 
 % We ignore the new nk and ntot outputs with ~
-[t_new, Pe_new, ~, ~, ~] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
+% Pass t_orig instead of T_final to force output at the exact same time steps
+[~, Pe_new, ~, ~, ~] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, t_orig, false);
 
-% Interpolate new result onto original time grid for comparison
-Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear', 'extrap');
-
-% Compute max absolute difference
-eps = max(abs(Pe_new_interp - Pe_orig));
+% Compute max absolute difference directly (no interpolation needed)
+eps = max(abs(Pe_new - Pe_orig));
 end
 
 function status = local_output_fun(t_curr, ~, flag, T_final)

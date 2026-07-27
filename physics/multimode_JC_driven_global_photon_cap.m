@@ -5,7 +5,12 @@ function [tgrid, Pe, n_k_t, n_tot_t, numerical_plus_1_error] = multimode_JC_driv
 %% NUMERICAL PARAMETERS
 RelTol = 1e-9;
 AbsTol = 1e-9;
-tspan  = [0, T_final];
+if isscalar(T_final)
+    tspan  = [0, T_final];
+else
+    tspan  = T_final;
+    T_final = tspan(end); % Redefine for the output function
+end
 
 %% SYSTEM PARAMETERS
 omega = omega(:).';
@@ -98,7 +103,7 @@ n_tot_t = sum(n_k_t, 2);
 %% Numerical error calculation 
 if do_err_est
     fprintf('Calculating truncation error (running with nmax+1)...\n');
-    numerical_plus_1_error = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, tgrid, Pe);
+    numerical_plus_1_error = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, tgrid, Pe);
     fprintf('Numerical error estimate using nmax+1: %.3e\n', numerical_plus_1_error);
 else
     % If this IS the error check run, we don't calculate an error on top of it
@@ -109,14 +114,13 @@ end
 
 %% ======================= LOCAL FUNCTIONS =======================
 
-function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, T_final, t_orig, Pe_orig)
+function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Drive_integral, t_orig, Pe_orig)
 % The last argument 'false' prevents infinite recursion:
-[t_new, Pe_new, ~, ~, ~] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
-% Interpolate new result onto original time grid for comparison
-Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear', 'extrap');
+% Pass t_orig instead of T_final to force output at the exact same time steps
+[~, Pe_new, ~, ~, ~] = multimode_JC_driven_global_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, t_orig, false);
 
-% Compute max absolute difference
-eps = max(abs(Pe_new_interp - Pe_orig));
+% Compute max absolute difference directly (no interpolation needed)
+eps = max(abs(Pe_new - Pe_orig));
 end
 
 function status = local_output_fun(t_curr, ~, flag, T_final)

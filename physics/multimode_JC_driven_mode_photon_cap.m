@@ -142,7 +142,7 @@ function eps = estimate_truncation_error(omega, nu0, nmax, J_fluc, J_drive, Driv
 [t_new, Pe_new, ~, ~, ~] = multimode_JC_driven_mode_photon_cap(omega, nu0, nmax + 1, J_fluc, J_drive, Drive_integral, T_final, false);
 
 % Interpolate new result onto original time grid for comparison
-Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear');
+Pe_new_interp = interp1(t_new, Pe_new, t_orig, 'linear', 'extrap');
 
 % Compute max absolute difference
 eps = max(abs(Pe_new_interp - Pe_orig));

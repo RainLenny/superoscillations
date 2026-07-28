@@ -113,7 +113,7 @@ figure('Color', 'w', 'Name', 'Amplitude Scaling Test');
 hold on;
 
 for i = 1:length(sig_configs)
-    loglog(lambdas, sig_configs(i).Pe_max, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    loglog(lambdas, sig_configs(i).Pe_max, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
 % Plot reference slopes
@@ -122,8 +122,8 @@ ref_lambda = lambdas;
 ref_1st_order = sig_configs(1).Pe_max(1) * (ref_lambda / ref_lambda(1)).^2;
 ref_3rd_order = sig_configs(1).Pe_max(1) * (ref_lambda / ref_lambda(1)).^6;
 
-loglog(ref_lambda, ref_1st_order, '--k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^2$ \textbf{(1st order)}');
-loglog(ref_lambda, ref_3rd_order, '-.k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^6$ \textbf{(3rd order)}');
+loglog(ref_lambda, ref_1st_order, '--k', 'DisplayName', '\boldmath$\propto \lambda^2$ \textbf{(1st order)}');
+loglog(ref_lambda, ref_3rd_order, '-.k', 'DisplayName', '\boldmath$\propto \lambda^6$ \textbf{(3rd order)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
@@ -146,11 +146,11 @@ lambda_mid = exp((log(lambdas(1:end-1)) + log(lambdas(2:end))) / 2);
 
 for i = 1:length(sig_configs)
     slope_val = diff(log(sig_configs(i).Pe_max)) ./ diff(log(lambdas));
-    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
-yline(2, '--k', 'LineWidth', 4, 'DisplayName', '\textbf{1st order (slope=2)}');
-yline(6, '-.k', 'LineWidth', 4, 'DisplayName', '\textbf{3rd order (slope=6)}');
+yline(2, '--k', 'DisplayName', '\textbf{1st order (slope=2)}');
+yline(6, '-.k', 'DisplayName', '\textbf{3rd order (slope=6)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
@@ -166,7 +166,7 @@ figure('Color', 'w', 'Name', 'Amplitude Scaling Test (rho_1)');
 hold on;
 
 for i = 1:length(sig_configs)
-    loglog(lambdas, sig_configs(i).rho1_max, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    loglog(lambdas, sig_configs(i).rho1_max, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
 % Plot reference slopes
@@ -174,8 +174,8 @@ ref_lambda = lambdas;
 ref_1st_order_rho = sig_configs(1).rho1_max(1) * (ref_lambda / ref_lambda(1)).^1;
 ref_3rd_order_rho = sig_configs(1).rho1_max(1) * (ref_lambda / ref_lambda(1)).^3;
 
-loglog(ref_lambda, ref_1st_order_rho, '--k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^1$ \textbf{(1st order)}');
-loglog(ref_lambda, ref_3rd_order_rho, '-.k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^3$ \textbf{(3rd order)}');
+loglog(ref_lambda, ref_1st_order_rho, '--k', 'DisplayName', '\boldmath$\propto \lambda^1$ \textbf{(1st order)}');
+loglog(ref_lambda, ref_3rd_order_rho, '-.k', 'DisplayName', '\boldmath$\propto \lambda^3$ \textbf{(3rd order)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
@@ -192,11 +192,11 @@ hold on;
 
 for i = 1:length(sig_configs)
     slope_val = diff(log(sig_configs(i).rho1_max)) ./ diff(log(lambdas));
-    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
-yline(1, '--k', 'LineWidth', 4, 'DisplayName', '\textbf{1st order (slope=1)}');
-yline(3, '-.k', 'LineWidth', 4, 'DisplayName', ' \textbf{3rd order (slope=3)}');
+yline(1, '--k', 'DisplayName', '\textbf{1st order (slope=1)}');
+yline(3, '-.k', 'DisplayName', ' \textbf{3rd order (slope=3)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
@@ -212,15 +212,15 @@ figure('Color', 'w', 'Name', 'Amplitude Scaling Test (rho_2)');
 hold on;
 
 for i = 1:length(sig_configs)
-    loglog(lambdas, sig_configs(i).rho2_max, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    loglog(lambdas, sig_configs(i).rho2_max, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
 % Plot reference slopes
 ref_1st_order_rho2 = sig_configs(1).rho2_max(1) * (ref_lambda / ref_lambda(1)).^1;
 ref_3rd_order_rho2 = sig_configs(1).rho2_max(1) * (ref_lambda / ref_lambda(1)).^3;
 
-loglog(ref_lambda, ref_1st_order_rho2, '--k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^1$ \textbf{(1st order)}');
-loglog(ref_lambda, ref_3rd_order_rho2, '-.k', 'LineWidth', 4, 'DisplayName', '\boldmath$\propto \lambda^3$ \textbf{(3rd order)}');
+loglog(ref_lambda, ref_1st_order_rho2, '--k', 'DisplayName', '\boldmath$\propto \lambda^1$ \textbf{(1st order)}');
+loglog(ref_lambda, ref_3rd_order_rho2, '-.k', 'DisplayName', '\boldmath$\propto \lambda^3$ \textbf{(3rd order)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');
@@ -237,11 +237,11 @@ hold on;
 
 for i = 1:length(sig_configs)
     slope_val = diff(log(sig_configs(i).rho2_max)) ./ diff(log(lambdas));
-    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'LineWidth', 4, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    semilogx(lambda_mid, slope_val, sig_configs(i).marker, 'MarkerSize', 8, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
-yline(1, '--', 'LineWidth', 4, 'DisplayName', '\textbf{1st order (slope=1)}');
-yline(3, '-.', 'LineWidth', 4, 'DisplayName', '\textbf{3rd order (slope=3)}');
+yline(1, '--', 'DisplayName', '\textbf{1st order (slope=1)}');
+yline(3, '-.', 'DisplayName', '\textbf{3rd order (slope=3)}');
 
 grid on;
 xlabel('\boldmath$\lambda$ \textbf{(Drive Amplitude)}');

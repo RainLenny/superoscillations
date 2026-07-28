@@ -118,9 +118,9 @@ for i = 1:length(sig_configs)
         end
         % Plot mean
         mean_val = mean(sig_configs(i).max_Pe, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', sig_configs(i).color, 'LineWidth', 4, 'DisplayName', sprintf('%s (Mean)', sig_configs(i).name));
+        plot(OmegaTilde_array, mean_val, '--', 'Color', sig_configs(i).color, 'DisplayName', sprintf('%s (Mean)', sig_configs(i).name));
     else
-        plot(OmegaTilde_array, sig_configs(i).max_Pe, 'LineWidth', 4, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+        plot(OmegaTilde_array, sig_configs(i).max_Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
 end
 

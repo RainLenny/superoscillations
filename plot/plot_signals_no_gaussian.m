@@ -89,7 +89,7 @@ h1 = plot(freq_axis, fft_cos, '-o', 'Color', 'b','DisplayName', '\boldmath$\math
 h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
 
 % 2. Vertical reference line & Annotation
-xline(1.0, 'Color', 'black', 'LineWidth', 4);
+xline(1.0, 'Color', 'black');
 text(1, 30e-2, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');

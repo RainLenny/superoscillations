@@ -91,8 +91,8 @@ PlotUtils.setupDefaults();
 % Time-domain Signal Comparison
 figure('Color', 'w', 'Name', 'Signal Comparison');
 hold on;
-plot(t_samples, orig_sig_vals, 'b', 'LineWidth', 3, 'DisplayName', 'Original SO Signal');
-plot(t_samples, arrayfun(opt_sig_func, t_samples), 'r', 'LineWidth', 3, 'DisplayName', 'Optimized Signal');
+plot(t_samples, orig_sig_vals, 'b', 'DisplayName', 'Original SO Signal');
+plot(t_samples, arrayfun(opt_sig_func, t_samples), 'r', 'DisplayName', 'Optimized Signal');
 xlabel('Time [arb]');
 ylabel('Amplitude [arb]');
 title('Pulse Shape Comparison');
@@ -113,8 +113,8 @@ grid on;
 % Excitation Trajectory
 figure('Color', 'w', 'Name', 'Excitation Trajectory');
 hold on;
-plot(t_orig, rho_orig(:, 3), 'b', 'LineWidth', 3, 'DisplayName', 'Original \rho_3');
-plot(t_opt, rho_opt(:, 3), 'r', 'LineWidth', 3, 'DisplayName', 'Optimized \rho_3');
+plot(t_orig, rho_orig(:, 3), 'b', 'DisplayName', 'Original \rho_3');
+plot(t_opt, rho_opt(:, 3), 'r', 'DisplayName', 'Optimized \rho_3');
 xlabel('Time [arb]');
 ylabel('\rho_3 (Excitation)');
 title('Target TLS Excitation Trajectory');
@@ -149,7 +149,7 @@ for i = 1:length(sig_configs)
     tiledlayout(2, 1, 'TileSpacing', 'compact');
     
     ax(1) = nexttile; 
-    plot(t_inst, Pe_inst, 'LineWidth', 2.5, 'Color', sig_configs(i).color);
+    plot(t_inst, Pe_inst, 'Color', sig_configs(i).color);
     ylabel('P_e'); title(sprintf('%s: Excitation & Instantaneous Frequency', sig_configs(i).name));
     grid on; PlotUtils.styleAxes(gca);
     

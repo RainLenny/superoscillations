@@ -11,11 +11,11 @@ T   = 100;
 
 % Physical and simulation parameters
 nu0    = 1;
-J_drive = 6;
-J_fluc  = 0.003;
+J_drive = 3;
+J_fluc  = 0.006;
 
 T_final = 500;
-nmax    = 6;
+nmax    = 5;
 
 % Control flags
 do_err_est = 0;
@@ -27,7 +27,7 @@ sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
 % --- Signal 1: SO ---
 [SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
-sig_configs(1).name = '\textbf{SO}';
+sig_configs(1).name = '\textbf{SO }';
 sig_configs(1).data = SO_signal;
 sig_configs(1).color = 'r';
 sig_configs(1).freqs = angular_freqs_SO;
@@ -91,8 +91,8 @@ PlotUtils.setupDefaults();
 figure;
 hold on;
 for i = 1:length(sig_configs)
-    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'LineWidth', 5, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
-    plot(sig_configs(i).tgrid_nc, sig_configs(i).Pe_nc, '--', 'LineWidth', 3, 'Color', 'k', 'DisplayName', [sig_configs(i).name, ' \textbf{no fluc}']);
+    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    plot(sig_configs(i).tgrid_nc, sig_configs(i).Pe_nc, '--', 'Color', 'k', 'DisplayName', [sig_configs(i).name, ' \textbf{no fluc}']);
 end
 grid on;
 
@@ -108,7 +108,7 @@ PlotUtils.styleAxes(gca);
 figure;
 hold on;
 for i = 1:length(sig_configs)
-    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'LineWidth', 5, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 grid on;
 
@@ -124,7 +124,7 @@ for i = 1:length(sig_configs)
     figure;
     hold on;
     plot(sig_configs(i).tgrid, sig_configs(i).nk, 'LineWidth', 1.5); 
-    plot(sig_configs(i).tgrid, sig_configs(i).ntot, 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Total}'); 
+    plot(sig_configs(i).tgrid, sig_configs(i).ntot, 'k', 'DisplayName', '\textbf{Total}'); 
     grid on;
 
     xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
@@ -156,7 +156,7 @@ for i = 1:length(sig_configs)
     tiledlayout(2, 1, 'TileSpacing', 'compact');
     
     ax(1) = nexttile; 
-    plot(t_inst, Pe_inst, 'LineWidth', 2.5, 'Color', sig_configs(i).color);
+    plot(t_inst, Pe_inst, 'Color', sig_configs(i).color);
     ylabel('P_e'); title(sprintf('%s: Excitation & Instantaneous Frequency (Full Simulation)', sig_configs(i).name));
     grid on; PlotUtils.styleAxes(gca);
     

@@ -84,7 +84,7 @@ PlotUtils.setupDefaults();
 figure;
 hold on;
 for i = 1:length(sig_configs)
-    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'LineWidth', 5, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 grid on;
 
@@ -110,7 +110,7 @@ for i = 1:length(sig_configs)
     tiledlayout(2, 1, 'TileSpacing', 'compact');
     
     ax(1) = nexttile; 
-    plot(t_inst, Pe_inst, 'LineWidth', 2.5, 'Color', sig_configs(i).color);
+    plot(t_inst, Pe_inst, 'Color', sig_configs(i).color);
     ylabel('P_e'); title(sprintf('%s: Excitation & Instantaneous Frequency (Full Simulation)', sig_configs(i).name));
     grid on; PlotUtils.styleAxes(gca);
     

@@ -15,7 +15,7 @@ classdef PlotUtils
             set(groot, 'DefaultAxesTickLabelInterpreter', 'latex');
             
             % 2. Font Sizes and Weights
-            set(groot, 'DefaultAxesFontSize', 13);
+            set(groot, 'DefaultAxesFontSize', 15);
             set(groot, 'DefaultAxesFontWeight', 'bold');
             set(groot, 'DefaultTextFontSize', 14);
             set(groot, 'DefaultTextFontWeight', 'bold');
@@ -27,11 +27,11 @@ classdef PlotUtils
             
             % 3. Legend Defaults
             set(groot, 'DefaultLegendLocation', 'best');
-            set(groot, 'DefaultLegendFontSize', 14);
+            set(groot, 'DefaultLegendFontSize', 15);
             set(groot, 'DefaultLegendFontWeight', 'bold');
             
             % 4. Line & Border Defaults
-            set(groot, 'DefaultLineLineWidth', 4);
+            set(groot, 'DefaultLineLineWidth', 5);
             set(groot, 'DefaultAxesLineWidth', 1.5);
             
             % 5. Aesthetic Defaults: Clean white figure background
@@ -55,9 +55,22 @@ classdef PlotUtils
             end
             
             % Ensure basic properties are set correctly on the axes
-            ax.FontSize = 13;
-            ax.FontWeight = 'bold';
             ax.TickLabelInterpreter = 'latex';
+            
+            % MATLAB automatically links the Legend FontSize to the Axes FontSize,
+            % ignoring DefaultLegendFontSize. We manually enforce it here.
+            try
+                defaultLegSize = get(groot, 'DefaultLegendFontSize');
+                lgds = findobj(ax.Parent, 'Type', 'legend');
+                for k = 1:length(lgds)
+                    % Only apply to the legend linked to this axes
+                    if isequal(lgds(k).Axes, ax)
+                        lgds(k).FontSize = defaultLegSize;
+                    end
+                end
+            catch
+                % If DefaultLegendFontSize is not set, do nothing
+            end
             
             % Format dynamically generated ticks in bold LaTeX.
             % Double backslash (\\) is required so it isn't parsed as an escape character.

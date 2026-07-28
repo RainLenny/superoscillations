@@ -83,7 +83,7 @@ for i = 1:length(sig_configs)
     hold on;
     plot(sig_configs(i).tgrid, sig_configs(i).rho(:,1), 'LineWidth', 2, 'DisplayName', '\boldmath$\rho_{11} \ \mathrm{(Ground \ 1)}$');
     plot(sig_configs(i).tgrid, sig_configs(i).rho(:,2), 'LineWidth', 2, 'DisplayName', '\boldmath$\rho_{22} \ \mathrm{(Ground \ 2)}$');
-    plot(sig_configs(i).tgrid, sig_configs(i).rho(:,3), 'k', 'LineWidth', 3, 'DisplayName', '\boldmath$\rho_{33} \ \mathrm{(Excited)}$');
+    plot(sig_configs(i).tgrid, sig_configs(i).rho(:,3), 'k', 'DisplayName', '\boldmath$\rho_{33} \ \mathrm{(Excited)}$');
     grid on;
     xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
     ylabel('\boldmath$\mathrm{Populations}$');
@@ -94,7 +94,7 @@ for i = 1:length(sig_configs)
     % --- Zoom on Excited State Population ---
     figure('Color', 'w', 'Name', sprintf('Diabatic Transition Zoom (%s Signal)', sig_configs(i).name));
     hold on;
-    plot(sig_configs(i).tgrid, sig_configs(i).rho(:,3), 'k', 'LineWidth', 4, 'DisplayName', '\boldmath$\rho_{33} \ \mathrm{(Excited)}$');
+    plot(sig_configs(i).tgrid, sig_configs(i).rho(:,3), 'k', 'DisplayName', '\boldmath$\rho_{33} \ \mathrm{(Excited)}$');
     grid on;
     xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$');
     ylabel('\boldmath$\mathrm{Population \ \rho_{33}}$');

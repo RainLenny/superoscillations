@@ -55,7 +55,7 @@ hold on;
 
 h_arr = gobjects(1, length(sig_configs));
 for i = 1:length(sig_configs)
-    h_arr(i) = plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'LineWidth', 5, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+    h_arr(i) = plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 
 grid on;

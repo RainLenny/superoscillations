@@ -130,9 +130,9 @@ for i = 1:length(sig_configs)
         end
         % Plot mean
         mean_val = mean(sig_configs(i).max_Pe, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Rand Phase (Mean)}');
+        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (Mean)}');
     else
-        plot(OmegaTilde_array, sig_configs(i).max_Pe, 'LineWidth', 4, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+        plot(OmegaTilde_array, sig_configs(i).max_Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
 end
 
@@ -164,9 +164,9 @@ for i = 1:length(sig_configs)
         end
         % Plot mean
         mean_val = mean(sig_configs(i).Pe_500, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'LineWidth', 4, 'DisplayName', '\textbf{Rand Phase (Mean)}');
+        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (Mean)}');
     else
-        plot(OmegaTilde_array, sig_configs(i).Pe_500, 'LineWidth', 4, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+        plot(OmegaTilde_array, sig_configs(i).Pe_500, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
 end
 

@@ -1,13 +1,13 @@
-function [SO_signal, angular_freqs_SO] = generate_equal_spread(input_freqs, freq_scaling, amp_scaling, use_gaussian, use_conj)
+function [SO_signal, angular_freqs_SO] = generate_equal_spread(input_freqs, freq_scaling, amp_scaling, varargin)
 %GENERATE_SO_EQUAL_SPREAD Generate the Superoscillating (SO) signal for Equal Spread method
 %
-%   [SO_signal, angular_freqs_SO] = generate_SO_equal_spread(freq_scaling, amp_scaling, use_gaussian, use_conj)
+%   [SO_signal, angular_freqs_SO] = generate_SO_equal_spread(freq_scaling, amp_scaling, varargin)
 %
 %   INPUTS:
 %     freq_scaling  : multiplier for frequencies (default 1)
 %     amp_scaling   : multiplier for amplitudes (default 1)
-%     use_gaussian  : boolean, whether to apply the Gaussian canvas (default true)
-%     use_conj      : boolean, whether to keep complex conjugate signal (default true)
+%     varargin      : optional arguments passed directly to generate_signal_base
+%                     e.g., use_gaussian, use_conj, use_pulse_shaping
 %
 %   OUTPUTS:
 %     SO_signal         : function handle of the SO signal
@@ -19,17 +19,11 @@ function [SO_signal, angular_freqs_SO] = generate_equal_spread(input_freqs, freq
     if nargin < 3 || isempty(amp_scaling)
         amp_scaling = 1;
     end
-    if nargin < 4 || isempty(use_gaussian)
-        use_gaussian = true;
-    end
-    if nargin < 5 || isempty(use_conj)
-        use_conj = false;
-    end
 
     % Import from the .mat file instead of hardcoding
     amps_SO = amp_scaling;
     angular_freqs_SO = input_freqs * freq_scaling;
 
-    [SO_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_SO, use_gaussian, use_conj);
+    [SO_signal, angular_freqs_SO] = generate_signal_base(angular_freqs_SO, amps_SO, varargin{:});
 
 end

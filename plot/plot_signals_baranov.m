@@ -3,13 +3,13 @@ clear; clc;
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true);
+[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true, false, true);
 [VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(0.9, -1, true);
 
 
 
 % Normalize both signals symbolically by the peak of the first signal (using version with Gaussian envelope)
-[VinSOFun_comp,VinCosFun_comp] = normalize_signals({VinSOFun_comp,VinCosFun_comp}, 'peak');
+[VinSOFun_comp,VinCosFun_comp] = normalize_signals({VinSOFun_comp,VinCosFun_comp}, 'energy');
 
 
 
@@ -68,10 +68,11 @@ h2 = plot(freq_axis, fft_cos, '-', 'Color', 'b', 'DisplayName', '\boldmath$\math
 h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
 
 % 2. Vertical reference line & Annotation
-xline(1.0, 'Color', 'black');
-text(1, 50e-3, '\boldmath$\mathbf{\omega_0}$', ...
+xline(1.0, 'Color', 'black','LineWidth', 6);
+text(1, 0.0003, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
+
 
 % 3. Standard Labels
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');

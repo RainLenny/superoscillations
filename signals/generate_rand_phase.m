@@ -1,27 +1,30 @@
-function [Rand_signal, angular_freqs_SO, amps_rand] = generate_rand_phase(input_freqs, input_amps, use_gaussian, use_conj, random_seed)
+function [Rand_signal, angular_freqs_SO, amps_rand] = generate_rand_phase(input_freqs, input_amps, varargin)
 %GENERATE_RAND_PHASE Generate a signal with given amplitudes/frequencies but random phase
 %
-%   [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, input_amps, use_gaussian, use_conj, random_seed)
+%   [Rand_signal, angular_freqs_SO] = generate_rand_phase(input_freqs, input_amps, varargin)
 %
 %   INPUTS:
 %     input_freqs   : vector of angular frequencies
 %     input_amps    : vector of corresponding amplitudes
-%     use_gaussian  : boolean, whether to apply the Gaussian canvas (default true)
-%     use_conj      : boolean, whether to keep complex conjugate signal (default false)
-%     random_seed   : integer, seed for the random number generator (default 1)
+%     varargin      : optional arguments:
+%                       {1} use_gaussian (default true)
+%                       {2} use_conj (default false)
+%                       {3} random_seed (default 1)
+%                       {4+} use_pulse_shaping, etc. (passed to base)
 %
 %   OUTPUTS:
 %     Rand_signal       : function handle of the randomized phase signal
 %     angular_freqs_SO  : 1xN vector of angular frequencies used
 
-    if nargin < 3 || isempty(use_gaussian)
-        use_gaussian = true;
+    random_seed = 1;
+    if length(varargin) >= 3 && ~isempty(varargin{3})
+        random_seed = varargin{3};
     end
-    if nargin < 4 || isempty(use_conj)
-        use_conj = false;
-    end
-    if nargin < 5 || isempty(random_seed)
-        random_seed = 1;
+    
+    % Prepare arguments for base generator by removing random_seed
+    base_varargin = varargin;
+    if length(base_varargin) >= 3
+        base_varargin(3) = [];
     end
 
     angular_freqs_SO = input_freqs;
@@ -31,6 +34,6 @@ function [Rand_signal, angular_freqs_SO, amps_rand] = generate_rand_phase(input_
     tau_rand = 2*pi*rand(1, N_SO);
     amps_rand = abs(input_amps) .* exp(-1i .* tau_rand);
     
-    [Rand_signal, angular_freqs_SO , amps_rand] = generate_signal_base(angular_freqs_SO, amps_rand, use_gaussian, use_conj);
+    [Rand_signal, angular_freqs_SO , amps_rand] = generate_signal_base(angular_freqs_SO, amps_rand, base_varargin{:});
 
 end

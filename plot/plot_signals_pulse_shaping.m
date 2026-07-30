@@ -1,19 +1,22 @@
+clear; clc;
 %% Importing signals
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-[VinSOFun_comp, angular_freqs] = generate_SO_leakage_comparison(1,1,true);
-t_0 = 250; T = 100;
-data = load('SO_Baranov.mat', 'amps_SO', 'angular_freqs_SO');
-w_n = data.angular_freqs_SO(:);
-A_n = data.amps_SO(:);
-ESD_SO = @(w) abs( sum( conj(A_n) .* (T * sqrt(pi) * exp(-((w + w_n).^2) * T^2 / 4) .* exp(-1i * (w + w_n) * t_0)), 1 ) ).^2;
-E_SO_in_band = (1 / (2 * pi)) * integral(ESD_SO, -1.05, -0.95);
-E_cos_unnormalized = T * sqrt(pi / 2);
-Cos_normalization = sqrt(E_SO_in_band / E_cos_unnormalized);
-[VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(1, -Cos_normalization, true);
+[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true);
+[VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(0.9, -1, true);
+
+
+
+% Normalize both signals symbolically by the peak of the first signal (using version with Gaussian envelope)
+[VinSOFun_comp,VinCosFun_comp] = normalize_signals({VinSOFun_comp,VinCosFun_comp}, 'energy');
+
+
+
 VinSOFun = @(t) real(VinSOFun_comp(t));
 VinCosFun = @(t) real(VinCosFun_comp(t));
+
+
 
 
 %% SAMPLING Constants
@@ -34,7 +37,7 @@ sampled_superoscillation = VinSOFun(t_axis);
 figure
 hold on;
 % Capture the handles (h1, h2) as you plot
-h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'DisplayName', '\boldmath$\mathbf{\omega_0}$');
+h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
 h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'DisplayName', '\textbf{SO}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
@@ -61,14 +64,15 @@ figure;
 hold on;
 
 % 1. Plotting Data
-h2 = plot(freq_axis, (fft_cos), '-', 'Color', 'b', 'DisplayName', '\boldmath$\mathbf{\omega_0}$');
+h2 = plot(freq_axis, fft_cos, '-', 'Color', 'b', 'DisplayName', '\boldmath$\mathbf{0.9\omega_0}$');
 h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
 
 % 2. Vertical reference line & Annotation
-xline(1.0, 'Color', 'black');
-text(1, 2e-4, '\boldmath$\mathbf{\omega_0}$', ...
+xline(1.0, 'Color', 'black','LineWidth', 6);
+text(1, 0.025, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
+
 
 % 3. Standard Labels
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');
@@ -77,13 +81,14 @@ ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
 % 4. Legend and Limits
 legend([h1, h2]);
 xlim([0, 1.1]);
-ylim([0, 4e-4]);
+% ylim([0, 4e-2]);
 
 % 5. Axis Formatting (Scales y by 1e3 and adds top-left exponent \times 10^{-3})
 PlotUtils.styleAxes(gca, 1e3);
 hold off;
 
-%% Stable Ratio Calculation
+%% Calculate ratio between peak amplitude and amplitude at resonance 
+%Stable Ratio Calculation
 % 1. Find the peak (Highest Amplitude)
 [max_amp, max_idx] = max(fft_superoscillation);
 freq_at_max = freq_axis(max_idx);
@@ -94,7 +99,7 @@ target_freq = 1.0;
 amp_at_1 = interp1(freq_axis, fft_superoscillation, target_freq, 'pchip');
 
 % 3. Calculate the ratio
-amp_ratio = amp_at_1 / max_amp ;
+amp_ratio = max_amp / amp_at_1;
 
 %Display Results
 fprintf('\n--- Stable Amplitude Ratio Analysis ---\n');
@@ -104,5 +109,5 @@ fprintf('Target Frequency:          %.8f omega_0\n', target_freq);
 fprintf('----------------------------------------\n');
 fprintf('Highest Amplitude (Max):   %.6e\n', max_amp);
 fprintf('Amplitude at exactly 1.0:  %.6e\n', amp_at_1);
-fprintf('Ratio (Amp@1 / Max):       %.6e\n', amp_ratio);
+fprintf('Ratio (Max / Amp@1):       %.6e\n', amp_ratio);
 fprintf('----------------------------------------\n');

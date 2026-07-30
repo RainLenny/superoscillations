@@ -36,6 +36,7 @@ classdef PlotUtils
             
             % 5. Aesthetic Defaults: Clean white figure background
             set(groot, 'DefaultFigureColor', 'w');
+            set(groot, 'DefaultFigureWindowStyle', 'docked'); % Dock figures as tabs
             
             % 6. Grid Defaults (Default to off, individual scripts can override using 'grid on')
             set(groot, 'DefaultAxesXGrid', 'off');

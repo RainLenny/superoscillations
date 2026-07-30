@@ -3,7 +3,7 @@ clear; clc;
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true, false, true);
+[VinSOFun_comp, angular_freqs] = generate_SO_from_dat_file('SO_Baranov', 1, 1, true);
 [VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(0.9, -1, true);
 
 
@@ -69,7 +69,7 @@ h1 = plot(freq_axis, fft_superoscillation, '-', 'Color', 'r', 'DisplayName', '\t
 
 % 2. Vertical reference line & Annotation
 xline(1.0, 'Color', 'black','LineWidth', 6);
-text(1, 0.0003, '\boldmath$\mathbf{\omega_0}$', ...
+text(1, 0.025, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
 
@@ -83,8 +83,8 @@ legend([h1, h2]);
 xlim([0, 1.1]);
 % ylim([0, 4e-2]);
 
-% 5. Axis Formatting (Scales y by 1e3 and adds top-left exponent \times 10^{-3})
-PlotUtils.styleAxes(gca, 1e3);
+% 5. Axis Formatting
+PlotUtils.styleAxes(gca);
 hold off;
 
 %% Calculate ratio between peak amplitude and amplitude at resonance 

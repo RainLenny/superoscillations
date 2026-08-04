@@ -26,11 +26,7 @@ sig_configs(2).color = [0, 0.5, 0];
 sig_configs(2).freqs = angular_freqs_SO;
 
 % Normalize signals together
-sigs = {sig_configs.data};
-[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
-for i = 1:length(sig_configs)
-    sig_configs(i).data = norm_sigs{i};
-end
+sig_configs = normalize_sig_configs(sig_configs, 'peak');
 
 % Apply defaults (auto-colors)
 sig_configs = prepare_signal_config(sig_configs);

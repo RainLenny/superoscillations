@@ -50,11 +50,7 @@ sig_configs(4).data = Cos_resonant_signal;
 sig_configs(4).freqs = angular_freqs_COS_resonant;
 
 % Normalize both signals symbolically by the peak of the first signal
-sigs = {sig_configs.data};
-[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'peak');
-for i = 1:length(sig_configs)
-    sig_configs(i).data = norm_sigs{i};
-end
+sig_configs = normalize_sig_configs(sig_configs, 'peak');
 
 % Apply defaults (auto-colors)
 sig_configs = prepare_signal_config(sig_configs);

@@ -1,7 +1,7 @@
-function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
+function [tgrid, Pe, Ce, Cg] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
 %JC_DRIVE_ONLY Solve two-level dynamics for a driven JC system.
 %
-%   [tgrid, Pe] = JC_DRIVE_ONLY(D, tspan, Ce0)
+%   [tgrid, Pe, Ce, Cg] = JC_DRIVE_ONLY(nu0, Jtot, Drive_integral, tspan, Ce0)
 %
 % INPUTS
 %The Drive_integral should be the integral convolution result 
@@ -38,4 +38,6 @@ function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
     [tgrid, C] = ode45(odefun, tspan, [Ce0; Cg0], opts);
 
     Pe = abs(C(:, 1)).^2;
+    Ce = C(:, 1);
+    Cg = C(:, 2);
 end

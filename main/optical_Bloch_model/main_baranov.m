@@ -57,11 +57,7 @@ sig_configs(4).color = [0, 0.5, 0];
 sig_configs(4).freqs = angular_freqs_SO;
 
 % Normalize all signals
-sigs = {sig_configs.data};
-[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'energy');
-for i = 1:length(sig_configs)
-    sig_configs(i).data = norm_sigs{i};
-end
+sig_configs = normalize_sig_configs(sig_configs, 'energy');
 
 % Apply defaults (auto-colors)
 sig_configs = prepare_signal_config(sig_configs);

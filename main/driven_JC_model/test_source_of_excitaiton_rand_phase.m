@@ -2,7 +2,7 @@
 clear; clc; close all;
 
 %% SETTINGS FOR PARAMETER SWEEP
-OmegaTilde_array = linspace(0.015, 0.025, 50); % Array of signal magnitudes to test
+Coupling_array = linspace(0.015, 0.025, 50); % Array of signal magnitudes to test
 num_rng_seeds = 40; % Number of random phases for Rand signal
 
 %% CONSTANTS
@@ -20,7 +20,6 @@ t_grid = (0:dt:T_final)';
 signal_scaling = 1;
 
 [SO_signal, angular_freqs_SO, amps_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
-[Flat_signal, ~] = generate_equal_spread(angular_freqs_SO, 1, signal_scaling, true, true);
 
 sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {}, 'amps', {}, 'is_rand_phase', {});
 
@@ -32,13 +31,12 @@ sig_configs(1).freqs = angular_freqs_SO;
 sig_configs(1).amps = amps_SO;
 sig_configs(1).is_rand_phase = false;
 
-% % --- Signal 2: Flat ---
-% sig_configs(2).name = '\textbf{Flat}';
-% sig_configs(2).data = Flat_signal;
-% sig_configs(2).color = [0, 0.5, 0];
-% sig_configs(2).freqs = angular_freqs_SO;
-% sig_configs(2).amps = amps_SO;
-% sig_configs(2).is_rand_phase = false;
+% --- Signal 2: COS ---
+[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9, signal_scaling, true, true);
+sig_configs(3).name = '\boldmath$\mathbf{0.9\omega_0}$';
+sig_configs(3).data = Cos_signal;
+sig_configs(3).color = 'b';
+sig_configs(3).freqs = angular_freqs_COS;
 
 % --- Signal 3: Rand Phase ---
 sig_configs(2).name = '\textbf{Rand Phase}';
@@ -48,53 +46,64 @@ sig_configs(2).freqs = angular_freqs_SO;
 sig_configs(2).amps = amps_SO;
 sig_configs(2).is_rand_phase = true;
 
-% Apply defaults (auto-colors)
-sig_configs = prepare_signal_config(sig_configs);
-
 %% DATA STORAGE
 for i = 1:length(sig_configs)
     if sig_configs(i).is_rand_phase
-        sig_configs(i).max_Pe = zeros(length(OmegaTilde_array), num_rng_seeds);
-        sig_configs(i).Pe_500 = zeros(length(OmegaTilde_array), num_rng_seeds);
+        sig_configs(i).max_Pe = zeros(length(Coupling_array), num_rng_seeds);
+        sig_configs(i).Pe_500 = zeros(length(Coupling_array), num_rng_seeds);
     else
-        sig_configs(i).max_Pe = zeros(length(OmegaTilde_array), 1);
-        sig_configs(i).Pe_500 = zeros(length(OmegaTilde_array), 1);
+        sig_configs(i).max_Pe = zeros(length(Coupling_array), 1);
+        sig_configs(i).Pe_500 = zeros(length(Coupling_array), 1);
     end
+end
+
+%% PRECOMPUTE AND NORMALIZE SIGNALS
+fprintf('Precomputing and normalizing signals...\n');
+
+% Collect all raw signals in a flat list to normalize them together
+all_raw_signals = {};
+signal_indices = []; % To keep track of which config each signal belongs to
+
+for i = 1:length(sig_configs)
+    if sig_configs(i).is_rand_phase
+        for seed = 1:num_rng_seeds
+            [Rand_signal, ~] = generate_rand_phase(sig_configs(i).freqs, sig_configs(i).amps, true, true, seed);
+            all_raw_signals{end+1} = Rand_signal;
+            signal_indices(end+1) = i;
+        end
+    else
+        all_raw_signals{end+1} = sig_configs(i).data;
+        signal_indices(end+1) = i;
+    end
+end
+
+% Normalize all signals relative to the first signal (SO)
+norm_results = cell(1, length(all_raw_signals));
+[norm_results{:}] = normalize_signals(all_raw_signals, 'energy');
+
+% Distribute the normalized signals back to sig_configs
+for i = 1:length(sig_configs)
+    sig_configs(i).norm_signals = norm_results(signal_indices == i);
 end
 
 %% DYNAMICS COMPUTATION
 fprintf('Starting parameter sweep over OmegaTilde...\n');
 
-for j = 1:length(OmegaTilde_array)
-    fprintf('Computing for OmegaTilde = %.4f (%d/%d)\n', OmegaTilde_array(j), j, length(OmegaTilde_array));
+for j = 1:length(Coupling_array)
+    fprintf('Computing for OmegaTilde = %.4f (%d/%d)\n', Coupling_array(j), j, length(Coupling_array));
     
-    
-    for seed = 1:num_rng_seeds
-        % Generate signals for this seed
-        current_data = cell(1, length(sig_configs));
-        for i = 1:length(sig_configs)
-            if sig_configs(i).is_rand_phase
-                [Rand_signal, ~] = generate_rand_phase(sig_configs(i).freqs, sig_configs(i).amps, true, true, seed);
-                current_data{i} = Rand_signal;
-            else
-                current_data{i} = sig_configs(i).data;
-            end
-        end
-        
-        % Normalize signals
-        [norm_data{1:length(current_data)}] = normalize_signals(current_data, 'energy');
-        
-        % Simulate
-        for i = 1:length(sig_configs)
-            if sig_configs(i).is_rand_phase
-                [~, Pe] = JC_drive_only(nu0, OmegaTilde_array(j), norm_data{i}, t_grid);
+    for i = 1:length(sig_configs)
+        if sig_configs(i).is_rand_phase
+            for seed = 1:num_rng_seeds
+                [~, Pe] = JC_drive_only(nu0, Coupling_array(j), sig_configs(i).norm_signals{seed}, t_grid);
                 sig_configs(i).max_Pe(j, seed) = max(Pe);
                 sig_configs(i).Pe_500(j, seed) = Pe(idx_t500);
-            elseif seed == 1 % only simulate once for non-rand
-                [~, Pe] = JC_drive_only(nu0, OmegaTilde_array(j), norm_data{i}, t_grid);
-                sig_configs(i).max_Pe(j) = max(Pe);
-                sig_configs(i).Pe_500(j) = Pe(idx_t500);
             end
+        else
+            % Simulate only once for non-rand
+            [~, Pe] = JC_drive_only(nu0, Coupling_array(j), sig_configs(i).norm_signals{1}, t_grid);
+            sig_configs(i).max_Pe(j) = max(Pe);
+            sig_configs(i).Pe_500(j) = Pe(idx_t500);
         end
     end
 end
@@ -115,16 +124,16 @@ for i = 1:length(sig_configs)
         % Plot individual random seeds as scattered lines with transparency
         for seed = 1:num_rng_seeds
             if seed == 1
-                plot(OmegaTilde_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
+                plot(Coupling_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
             else
-                plot(OmegaTilde_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
+                plot(Coupling_array, sig_configs(i).max_Pe(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
             end
         end
         % Plot mean
         mean_val = mean(sig_configs(i).max_Pe, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (mean)}');
+        plot(Coupling_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (mean)}');
     else
-        plot(OmegaTilde_array, sig_configs(i).max_Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+        plot(Coupling_array, sig_configs(i).max_Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
 end
 
@@ -132,7 +141,7 @@ grid on;
 xlabel(' \textbf{Coupling (signal magnitude)}');
 ylabel(' \textbf{Maximal excitation probability}');
 legend('show', 'Location', 'northwest', 'Interpreter', 'latex');
-xlim([OmegaTilde_array(1),OmegaTilde_array(end)])
+xlim([Coupling_array(1),Coupling_array(end)])
 
 
 
@@ -141,7 +150,7 @@ PlotUtils.styleAxes(gca);
 ax = gca;
 ax.XAxis.Exponent = -2;
 xtickformat(ax, '$\\mathbf{%g}$');
-xticks(linspace(OmegaTilde_array(1), OmegaTilde_array(end), 5));
+xticks(linspace(Coupling_array(1), Coupling_array(end), 5));
 xtickangle(0.1);
 ylim([0.2,1])
 
@@ -156,16 +165,16 @@ for i = 1:length(sig_configs)
         % Plot individual random seeds as scattered lines with transparency
         for seed = 1:num_rng_seeds
             if seed == 1
-                plot(OmegaTilde_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
+                plot(Coupling_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'DisplayName', '\textbf{Rand Phase (individual)}');
             else
-                plot(OmegaTilde_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
+                plot(Coupling_array, sig_configs(i).Pe_500(:, seed), '-', 'Color', [sig_configs(i).color 0.2], 'LineWidth', 1.5, 'HandleVisibility', 'off');
             end
         end
         % Plot mean
         mean_val = mean(sig_configs(i).Pe_500, 2);
-        plot(OmegaTilde_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (Mean)}');
+        plot(Coupling_array, mean_val, '--', 'Color', 'k', 'DisplayName', '\textbf{Rand Phase (Mean)}');
     else
-        plot(OmegaTilde_array, sig_configs(i).Pe_500, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
+        plot(Coupling_array, sig_configs(i).Pe_500, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
     end
 end
 
@@ -180,5 +189,5 @@ PlotUtils.styleAxes(gca);
 ax = gca;
 ax.XAxis.Exponent = -2;
 xtickformat(ax, '$\\mathbf{%g}$');
-xticks(linspace(OmegaTilde_array(1), OmegaTilde_array(end), 5));
+xticks(linspace(Coupling_array(1), Coupling_array(end), 5));
 xtickangle(0.1);

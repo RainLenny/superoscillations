@@ -56,14 +56,8 @@ sig_configs(2).freqs = angular_freqs_COS;
 % sig_configs(3).freqs = angular_freqs_SO;
 
 % Normalize all signals symbolically by the peak of the first signal
-sigs = {sig_configs.data};
-[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'energy');
-for i = 1:length(sig_configs)
-    sig_configs(i).data = norm_sigs{i};
-end
+sig_configs = normalize_sig_configs(sig_configs, 'energy');
 
-% Apply defaults (auto-colors)
-sig_configs = prepare_signal_config(sig_configs);
 
 %% 2. Dynamics computation
 fprintf('\n===== Numerical Errors =====\n');

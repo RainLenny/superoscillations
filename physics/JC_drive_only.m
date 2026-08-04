@@ -34,7 +34,7 @@ function [tgrid, Pe] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
         -1i * Jtot * conj(f(t))  * C(1)   % dCg/dt
     ];
 
-    opts = odeset('RelTol', 1e-20, 'AbsTol', 1e-20);
+    opts = odeset('RelTol', 100 * eps, 'AbsTol', 1e-20);
     [tgrid, C] = ode45(odefun, tspan, [Ce0; Cg0], opts);
 
     Pe = abs(C(:, 1)).^2;

@@ -11,17 +11,17 @@ T   = 100;
 
 % Physical and simulation parameters
 nu0    = 1;
-J_drive = 3;
-J_fluc  = 0.006;
+J_drive = 3.6;
+J_fluc  = 0.0065;
 
 T_final = 500;
-nmax    = 5;
+nmax    = 0;
 
 % Control flags
 do_err_est = 0;
 
 %% 1. Define Signals
-signal_scaling = 1.3;
+signal_scaling = 1;
 
 sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
@@ -92,7 +92,7 @@ figure;
 hold on;
 for i = 1:length(sig_configs)
     plot(sig_configs(i).tgrid, sig_configs(i).Pe, 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
-    plot(sig_configs(i).tgrid_nc, sig_configs(i).Pe_nc, '--', 'Color', 'k', 'DisplayName', [sig_configs(i).name, ' \textbf{no fluc}']);
+    plot(sig_configs(i).tgrid_nc, sig_configs(i).Pe_nc, '--', 'Color', 'k','HandleVisibility', 'off');
 end
 grid on;
 

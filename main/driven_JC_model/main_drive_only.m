@@ -6,41 +6,36 @@ addpath(genpath(fileparts(mfilename('fullpath'))));
 PlotUtils.setupDefaults();
 
 %% 1. Define Signals
+signal_scaling = 1;
+
 sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
 % --- Signal 1: SO ---
-[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov');
-sig_configs(1).name = '\textbf{SO}';
+[SO_signal, angular_freqs_SO] = generate_SO_from_dat_file('SO_Baranov', 1, signal_scaling, true, true);
+sig_configs(1).name = '\textbf{SO }';
 sig_configs(1).data = SO_signal;
 sig_configs(1).color = 'r';
 sig_configs(1).freqs = angular_freqs_SO;
 
 % --- Signal 2: COS ---
-[Cos_signal_unscaled, angular_freqs_COS] = generate_Cos_reference(0.7, -1, true);
-[~, peak_SO] = normalize_signals(SO_signal, 'peak');
-[~, peak_COS] = normalize_signals(Cos_signal_unscaled, 'peak');
-scale_factor = peak_SO / peak_COS;
-[Cos_signal, ~] = generate_Cos_reference(0.7, -scale_factor, true);
-
-% Normalize both signals symbolically by the peak of the first signal
-[SO_signal, Cos_signal] = normalize_signals({SO_signal, Cos_signal}, 'peak');
-
-% Update data after normalization
-sig_configs(1).data = SO_signal;
-
-sig_configs(2).name = '\boldmath$\mathrm{0.9\omega_0}$'; % Using 0.7 internally but maybe they call it 0.9? Wait, let's just keep 'COS' 
-sig_configs(2).name = '\textbf{COS}';
+[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9, signal_scaling, true, true);
+sig_configs(2).name = '\boldmath$\mathbf{0.9\omega_0}$';
 sig_configs(2).data = Cos_signal;
 sig_configs(2).color = 'b';
 sig_configs(2).freqs = angular_freqs_COS;
 
-% Apply defaults (auto-colors)
-sig_configs = prepare_signal_config(sig_configs);
+% Normalize all signals symbolically by the peak of the first signal
+sigs = {sig_configs.data};
+[norm_sigs{1:length(sigs)}] = normalize_signals(sigs, 'energy');
+for i = 1:length(sig_configs)
+    sig_configs(i).data = norm_sigs{i};
+end
+
 
 %% 2. Run Simulations
 nu0 = 1;
 tspan = [0,500];
-Jtot = 0.03;
+Jtot = 0.02;
 
 for i = 1:length(sig_configs)
     [tgrid, Pe] = JC_drive_only(nu0, Jtot, sig_configs(i).data, tspan);

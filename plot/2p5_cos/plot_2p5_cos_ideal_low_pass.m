@@ -3,123 +3,126 @@ clear; clc;
 % Add project root and all subfolders to search path
 addpath(genpath(fileparts(fileparts(mfilename('fullpath')))));
 PlotUtils.setupDefaults();
-
 [VinSOFun_comp, angular_freqs, amps_SO] = generate_SO_from_dat_file('2p5_cos_Derek', 1, 1, false);
-VinSOFun = @(t) real(VinSOFun_comp(t));
+[VinCosFun_comp, angular_freqs_COS] = generate_Cos_reference(1, 1, false);
 
-%% Parameters
-omega_0 = 1;
-omega_c = 0.7; % Filter cutoff frequency
+VinSOFun = @(t) real(VinSOFun_comp(t)) ./ real(VinSOFun_comp(0));
 
-%% Time Axis Setup
-f_sampling = 600/(2*pi);
-dt = 1 / f_sampling;
-% Use a fixed range for better visualization matching the image
-t_axis = -15 : dt : 15; 
+VinCosFun = @(t) real(VinCosFun_comp(t));
+
+
+%% SAMPLING Constants
+f_sampling = 60/(2*pi);
+% fundamental_period of the superoscillating signal:
+T_period = compute_fundamental_period([angular_freqs,angular_freqs_COS],f_sampling);
+signals_duration = T_period * 100; % total duration to simulate
+dt = 1 / f_sampling; % sample‐interval in seconds
+t_axis = -signals_duration/2 : dt : signals_duration/2;
+t_axis = t_axis(1:end-1);
 t_axis = t_axis(:);
 
-%% Generate Time Domain Signals
-so_signal = VinSOFun(t_axis);
-% Normalize SO signal so peak is 1 (to match the visualization)
-max_so = max(abs(so_signal));
-if max_so > 0
-    so_signal = so_signal / max_so;
-end
 
-% Cosine reference signal
-cos_signal = cos(omega_0 * t_axis);
+%% Sample the signals
+% Using a cos reference of frequency 1 (\omega_0) as requested
+cos1 = VinCosFun(t_axis);
+sampled_superoscillation = VinSOFun(t_axis);
 
-% Ideal filter impulse response in time domain: h(t) = (omega_c / pi) * sinc(omega_c * t / pi)
-% MATLAB's sinc is sinc(x) = sin(pi*x)/(pi*x), so sinc(omega_c * t / pi) gives sin(omega_c * t) / (omega_c * t)
-filter_time = (omega_c / pi) * sinc(omega_c * t_axis / pi);
 
-%% Figure 1: Time Domain
+%% FFT the signals
+N = length(t_axis);
+freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
+
+% Calculate the FFT magnitude
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation, N)))*dt;
+fft_cos = fftshift(abs(fft(cos1, N)))*dt;
+
+% Normalize by the number of samples (N) to get true Fourier coefficients
+fft_superoscillation = fft_superoscillation / (sum(fft_superoscillation));
+fft_cos = fft_cos / (sum(fft_cos));
+
+
+%% Figure (a): The signals and the ideal filter in the time domain.
 figure;
 hold on;
-plot(t_axis, so_signal, '-', 'Color', '#FF6666', 'LineWidth', 4, 'DisplayName', '\textbf{Superoscillation}');
-plot(t_axis, cos_signal, '--', 'Color', '#8888FF', 'LineWidth', 4, 'DisplayName', '\textbf{Cosine}');
-plot(t_axis, filter_time, '-.', 'Color', [0.7 0.7 0.7], 'LineWidth', 4, 'DisplayName', '\textbf{Filter}');
-hold off;
+% Scale filter to have similar amplitude to signals for visualization
+filter_time = (0.7/pi) * sinc(0.7 * t_axis / pi);
+filter_time = filter_time / max(filter_time) ; % scale factor to match image roughly
+
+plot(t_axis, real(sampled_superoscillation), '-', 'color', 'r', 'DisplayName', '\textbf{SO}');
+plot(t_axis, cos1, ':', 'color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{\omega_0}$}');
+plot(t_axis, filter_time, '-.', 'color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
-title('\boldmath$\mathbf{(a) \ The \ signals \ and \ the \ ideal \ filter \ in \ the \ time \ domain.}$');
-legend('show', 'Location', 'best');
-xlim([-15, 15]);
-ylim([-0.5, 1.1]);
-set(gca, 'XColor', 'k');
+legend('show');
+xlim([-8, 8]);
 PlotUtils.styleAxes(gca);
+hold off;
 
-%% Figure 2: Frequency Domain
+
+%% Figure (b): The signals and the ideal filter on the frequency domain.
 figure;
 hold on;
+% Filter in frequency domain: Rect function from -0.7 to 0.7
+filter_freq = double(abs(freq_axis) <= 0.7);
 
-% Filter frequency response (ideal rect from -omega_c to omega_c)
-plot([-1.5, -omega_c, -omega_c, omega_c, omega_c, 1.5], ...
-     [0, 0, 1, 1, 0, 0], ':', 'Color', [0.8 0.8 0.8], 'LineWidth', 3, 'DisplayName', '\textbf{Filter}');
+% Assign handles to each plot
+h1 = plot(freq_axis, fft_cos, '-o', 'Color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{\omega_0}$}');
+h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
+h3 = plot(freq_axis, filter_freq, '--', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 
-% SO frequencies (we know angular_freqs are < omega_c)
-if ~isempty(angular_freqs)
-    stem_freqs = [angular_freqs(:); -angular_freqs(:)];
-    stem_amps = [abs(amps_SO(:)); abs(amps_SO(:))]; 
-    % Normalize stems to 1 for visual clarity
-    if max(stem_amps) > 0
-        stem_amps = stem_amps / max(stem_amps);
-    end
-    stem(stem_freqs, stem_amps, 'filled', 'Color', '#FF6666', 'LineWidth', 2, 'MarkerSize', 6, 'DisplayName', '\textbf{Superoscillation}');
-else
-    % Fallback if empty
-    stem([0], [1], 'filled', 'Color', '#FF6666', 'LineWidth', 2, 'MarkerSize', 6, 'DisplayName', '\textbf{Superoscillation}');
-end
-
-% Cosine frequency (deltas at -omega_0 and omega_0)
-plot([-omega_0, -omega_0], [0, 1], '-', 'Color', '#8888FF', 'LineWidth', 3, 'DisplayName', '\textbf{Cosine}');
-plot([omega_0, omega_0], [0, 1], '-', 'Color', '#8888FF', 'LineWidth', 3, 'HandleVisibility', 'off');
-
-hold off;
 xlabel('\boldmath$\mathbf{Frequency \ [\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
-title('\boldmath$\mathbf{(b) \ The \ signals \ and \ the \ ideal \ filter \ on \ the \ frequency \ domain.}$');
-legend('show', 'Location', 'best');
+
+% Specify the legend order explicitly using the handles
+legend([h2, h1, h3]);
+
 xlim([-1.5, 1.5]);
-ylim([0, 1.2]);
-set(gca, 'XColor', 'k');
 PlotUtils.styleAxes(gca);
+hold off;
 
-%% Figure 3: Filtered Signals (Analytical)
-figure;
 
+%% Figure (c): The signals filtered by the ideal filter.
 % Analytical filtering:
-% 1. SO is comprised of frequencies < omega_c, so it is untouched.
-filtered_so = so_signal; 
-% 2. Cosine has frequency omega_0 > omega_c, so it is completely filtered out.
-filtered_cos = zeros(size(t_axis));
+% SO is untouched (bandwidth < 0.7)
+filtered_superoscillation = sampled_superoscillation;
+% Cos is completely filtered out (freq 1 > 0.7)
+filtered_cos = zeros(size(cos1));
 
+figure;
 % Subplot 1: Superoscillating Signal
 subplot(2,1,1);
 hold on;
-plot(t_axis, so_signal, '-', 'Color', '#FF6666', 'LineWidth', 4, 'DisplayName', '\textbf{Original}');
-plot(t_axis, filtered_so, '--', 'Color', '#8888FF', 'LineWidth', 4, 'DisplayName', '\textbf{Filtered}');
-hold off;
-title('\boldmath$\mathbf{Superoscillating \ Signal}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
-legend('show', 'Location', 'best');
-xlim([-15, 15]);
-ylim([-0.5, 1.1]);
-set(gca, 'XColor', 'k');
+plot(t_axis, real(sampled_superoscillation), '-', 'color', 'r', 'DisplayName', '\textbf{Original}');
+plot(t_axis, real(filtered_superoscillation), '--', 'color', 'b', 'DisplayName', '\textbf{Filtered}');
+title('\textbf{SO Signal}');
+lgd = legend('show', 'Orientation', 'horizontal');
+xlim([-12, 12]);
 PlotUtils.styleAxes(gca);
+% Position legend between the plots without resizing axes
+lgd.Units = 'normalized';
+drawnow;
+lgd.Position(1) = 0.905 - lgd.Position(3);
+lgd.Position(2) = 0.46;
+hold off;
 
-% Subplot 2: Cosine Signal
+% Subplot 2: Cos Signal
 subplot(2,1,2);
 hold on;
-plot(t_axis, cos_signal, '-', 'Color', '#FF6666', 'LineWidth', 4, 'DisplayName', '\textbf{Original}');
-plot(t_axis, filtered_cos, '--', 'Color', '#8888FF', 'LineWidth', 4, 'DisplayName', '\textbf{Filtered}');
-hold off;
-title('\boldmath$\mathbf{Cosine \ Signal}$');
+plot(t_axis, cos1, '-', 'color', 'r', 'DisplayName', '\textbf{Original}');
+plot(t_axis, filtered_cos, '--', 'color', 'b', 'DisplayName', '\textbf{Filtered}');
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
-legend('show', 'Location', 'best');
-xlim([-15, 15]);
-ylim([-1.1, 1.1]);
-set(gca, 'XColor', 'k');
+title('\textbf{\boldmath$\mathbf{COS(\omega_0)}$}');
+xlim([-12, 12]);
+ylim([-1.2, 1.2]); % Adjust ylim for visibility of the zero line
 PlotUtils.styleAxes(gca);
+hold off;
+
+% Add shared y-axis label
+han = axes('visible', 'off'); 
+han.YLabel.Visible = 'on';
+ylabel(han, '\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
+PlotUtils.styleAxes(han);
+han.Visible = 'off';
+han.YLabel.Visible = 'on';
+

@@ -6,7 +6,7 @@ PlotUtils.setupDefaults();
 [VinSOFun_comp, angular_freqs, amps_SO] = generate_SO_from_dat_file('2p5_cos_Derek', 1, 1, false);
 
 
-
+% Normalization such that the cos will be of value 1 at t=0
 VinSOFun = @(t) real(VinSOFun_comp(t)) ./ real(VinSOFun_comp(0));
 
 
@@ -27,7 +27,7 @@ sampled_superoscillation = VinSOFun(t_axis);
 %% Plot 1: SO in time with instantaneous frequency
 % --- Plot 1 Y-Limit Controls ---
 % Set to [min, max] for manual limits, or [] for dynamic scaling
-ylim_plot1_so = [-4,7]*10^(-2);
+ylim_plot1_so = [-4,7]*10^(-2)/0.0148;
 ylim_plot1_freq = [-0.5,1.5];
 % -------------------------------
 
@@ -131,16 +131,16 @@ xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
 hold off;
 
 
+
 %% FFT the signals
-% Compute FFT
 N = length(t_axis);
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
-% 1. Compute the absolute, shifted FFT
-fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)));
+% Calculate FFT and normalize by N for true amplitude
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N))) / N;
 
-% 2. Normalize by the sum so the total magnitude equals 1
-fft_superoscillation = fft_superoscillation / sum(fft_superoscillation);
+
+
 
 
 %% Plot 2: SO FFT
@@ -150,7 +150,7 @@ h1 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\
 
 % 2. Vertical reference line & Annotation
 xline(1.0, 'Color', 'black','LineWidth', 6);
-text(1, 0.14, '\boldmath$\mathbf{\omega_0}$', ...
+text(1, 25, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
 
@@ -161,14 +161,14 @@ ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
 legend([h1]);
 grid off;
 xlim([0,1.1])
-% ylim([0,0.5])
+% ylim([0,36])
 
 set(gca, 'XColor', 'k');
 PlotUtils.styleAxes(gca);
 
-% Reduce the number of y-ticks
-ax = gca;
-current_yticks = yticks;
-yticks(current_yticks(1:2:end));
+% % Reduce the number of y-ticks
+% ax = gca;
+% current_yticks = yticks;
+% yticks(current_yticks(1:2:end));
 
 hold off;

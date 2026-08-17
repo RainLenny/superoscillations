@@ -7,7 +7,7 @@ PlotUtils.setupDefaults();
 
 
 
-VinSOFun = @(t) real(VinSOFun_comp(t));
+VinSOFun = @(t) real(VinSOFun_comp(t)) ./ real(VinSOFun_comp(0));
 
 
 %% SAMPLING Constants
@@ -53,7 +53,12 @@ end
 
 yyaxis right;
 p2 = plot(t_axis, inst_freq_num, '-' ,'color', '#006400', 'DisplayName', '\textbf{Inst. Freq.}');
-ylabel('\boldmath$\mathbf{Inst. \ freq. \ checkuUnits \ [\omega]}$');
+ylabel('\boldmath$\mathbf{Inst. \ freq. \ [\omega_0]}$');
+
+%green text
+yline(0.6, '--', 'Color', '#006400', 'LineWidth', 3, 'HandleVisibility', 'off');
+text(-23, 0.61, '\boldmath$\mathbf{\omega_{max}(SO)}$', 'Color', '#006400', 'Rotation', 90, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Interpreter', 'latex');
+
 ax = gca;
 ax.YAxis(2).Color = 'k';
 
@@ -68,7 +73,7 @@ elseif any(mask_so)
 end
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-xlim([-30,30]);
+xlim([-27,27]);
 
 legend('show', 'Location', 'best');
 
@@ -101,14 +106,41 @@ end
 
 hold off;
 
+%% Plot 2: SO zoom out
+
+figure;
+
+p1 = plot(t_axis, real(sampled_superoscillation), '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ax = gca;
+ax.YAxis(1).Color = 'k';
+
+
+
+
+xlim([-70,70]);
+
+legend('show', 'Location', 'best');
+
+set(gca, 'XColor', 'k');
+PlotUtils.styleAxes(gca);
+
+
+xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+
+hold off;
+
 
 %% FFT the signals
 % Compute FFT
 N = length(t_axis);
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
-fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)))*dt;
-fft_superoscillation = fft_superoscillation/(sum(fft_superoscillation));
+% 1. Compute the absolute, shifted FFT
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)));
+
+% 2. Normalize by the sum so the total magnitude equals 1
+fft_superoscillation = fft_superoscillation / sum(fft_superoscillation);
 
 
 %% Plot 2: SO FFT
@@ -116,8 +148,8 @@ figure;
 hold on;
 h1 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
 
-% Vertical reference line & Annotation
-xline(1.0, 'Color', 'black');
+% 2. Vertical reference line & Annotation
+xline(1.0, 'Color', 'black','LineWidth', 6);
 text(1, 0.14, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
@@ -133,4 +165,10 @@ xlim([0,1.1])
 
 set(gca, 'XColor', 'k');
 PlotUtils.styleAxes(gca);
+
+% Reduce the number of y-ticks
+ax = gca;
+current_yticks = yticks;
+yticks(current_yticks(1:2:end));
+
 hold off;

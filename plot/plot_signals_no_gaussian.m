@@ -68,16 +68,15 @@ hold off;
 
 
 %% FFT the signals
-% Compute FFT
 N = length(t_axis);
 freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 
-fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N)))*dt;
-fft_superoscillation = fft_superoscillation/(sum(fft_superoscillation));
+% Calculate FFT and normalize by N for true amplitude
+fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N))) / N;
 
-fft_cos = fftshift(abs(fft(sampled_signal,N)))*dt;
-fft_cos = fft_cos/(sum(fft_cos));
-% fft_cos = fftshift(abs(fft(sampled_signal,N)))*dt;
+fft_cos = fftshift(abs(fft(sampled_signal,N))) / N;
+
+
 
 
 %% Plot FFTs

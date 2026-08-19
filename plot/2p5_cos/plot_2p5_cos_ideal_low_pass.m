@@ -53,7 +53,7 @@ plot(t_axis, cos1, ':', 'color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{
 plot(t_axis, filter_time, '-.', 'color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 legend('show');
 xlim([-8, 8]);
 PlotUtils.styleAxes(gca);
@@ -72,12 +72,12 @@ h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\
 h3 = plot(freq_axis, filter_freq, '--', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 % Specify the legend order explicitly using the handles
 legend([h2, h1, h3]);
 
-xlim([-1.5, 1.5]);
+xlim([0, 1.5]);
 PlotUtils.styleAxes(gca);
 hold off;
 
@@ -121,7 +121,7 @@ hold off;
 % Add shared y-axis label
 han = axes('visible', 'off'); 
 han.YLabel.Visible = 'on';
-ylabel(han, '\boldmath$\mathbf{Amplitude \ [arb. \ units]}$');
+ylabel(han, '\boldmath$\mathbf{Amplitude \ [arb.]}$');
 PlotUtils.styleAxes(han);
 han.Visible = 'off';
 han.YLabel.Visible = 'on';

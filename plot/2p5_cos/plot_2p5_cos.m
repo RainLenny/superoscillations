@@ -36,7 +36,7 @@ figure;
 
 yyaxis left;
 p1 = plot(t_axis, real(sampled_superoscillation), '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 ax = gca;
 ax.YAxis(1).Color = 'k';
 
@@ -53,7 +53,7 @@ end
 
 yyaxis right;
 p2 = plot(t_axis, inst_freq_num, '-' ,'color', '#006400', 'DisplayName', '\textbf{Inst. Freq.}');
-ylabel('\boldmath$\mathbf{Inst. \ freq. \ [\omega_0]}$');
+ylabel('\boldmath$\mathbf{Inst. \ Freq. \ [\omega_0]}$');
 
 %green text
 yline(0.6, '--', 'Color', '#006400', 'LineWidth', 3, 'HandleVisibility', 'off');
@@ -111,7 +111,7 @@ hold off;
 figure;
 
 p1 = plot(t_axis, real(sampled_superoscillation), '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 ax = gca;
 ax.YAxis(1).Color = 'k';
 
@@ -156,7 +156,7 @@ text(1, 25, '\boldmath$\mathbf{\omega_0}$', ...
 
 % Updated X and Y labels with bold math/text formatting
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 legend([h1]);
 grid off;

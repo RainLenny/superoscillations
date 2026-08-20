@@ -80,7 +80,7 @@ h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\
 h3 = plot(freq_axis, filter_freq, '--', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [norm.]}$');
 
 % Specify the legend order explicitly using the handles
 legend([h2, h1, h3]);

@@ -41,7 +41,7 @@ plot(t_axis, cos1,'color', 'black', 'DisplayName', '\boldmath$\mathbf{\omega_0}$
 
 % Updated X-Label with bold math and text
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 legend('show');
 xlim([-15,30]);
 
@@ -57,7 +57,7 @@ h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'DisplayName', '\boldm
 h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'DisplayName', '\textbf{SO}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 % Pass the handles in the specific order you want them to appear
 legend([h1, h2]);
@@ -95,7 +95,7 @@ text(1, 30e-2, '\boldmath$\mathbf{\omega_0}$', ...
 
 % Updated X and Y labels with bold math/text formatting
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 legend([h2,h1]);
 grid off;

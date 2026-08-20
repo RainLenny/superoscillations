@@ -41,7 +41,7 @@ h2 = plot(t_axis, real(sampled_signal), '-','color', 'b', 'DisplayName', '\boldm
 h1 = plot(t_axis, real(sampled_superoscillation), '-','color', 'r', 'DisplayName', '\textbf{SO}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 % Pass the handles in the specific order you want them to appear
 legend([h1, h2]);
@@ -76,7 +76,7 @@ text(1, 0.025, '\boldmath$\mathbf{\omega_0}$', ...
 
 % 3. Standard Labels
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
 % 4. Legend and Limits
 legend([h1, h2]);

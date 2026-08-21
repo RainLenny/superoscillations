@@ -29,6 +29,7 @@ plot(freq_Hz, amp_dBm, '-', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 % LaTeX formatted labels as in the reference script
 xlabel('\boldmath$\mathbf{Frequency \ [Hz]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [dBm]}$');
+ylim([-5, 10]);
 
 legend('show');
 

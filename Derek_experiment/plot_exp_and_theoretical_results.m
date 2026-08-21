@@ -22,14 +22,13 @@ sa_V = 10.^(sa_dB / 20);
 %% Load theoretical notch filter response
 rlc_data = load(fullfile(fileparts(mfilename('fullpath')), 'optimized_RLC.mat'));
 theory_freq = rlc_data.freq_full;
-theory_dB = 20*log10(abs(rlc_data.H_opt)) + rlc_data.P0_final;
+theory_dB = 20*log10(abs(rlc_data.H_opt(theory_freq))) + rlc_data.P0_final;
 theory_V = 10.^(theory_dB / 20);
 
 %% Setup variables for looping over notch data
 files = {'notch_400khz1.csv', 'notch_500khz1.csv', 'notch_600khz0.csv', 'notch_800khz0.csv'};
 freq_labels = {'400 kHz', '500 kHz', '600 kHz', '800 kHz'};
 target_freqs = [400e3, 500e3, 600e3, 800e3]; % Corresponding base frequencies
-time_limits = [4e-5, 4e-5, 4e-5, 3e-5];
 
 tInc = 1e-9; % Time increment as used in python notebook
 
@@ -54,6 +53,7 @@ for i = 1:length(files)
     fft2_mag = abs(fft2);
     
     % Normalize experimental FFT
+
     fft1_norm = 0.9 * fft1_mag / max(fft1_mag);
     fft2_norm = 0.9 * fft2_mag / max(fft2_mag);
     
@@ -61,21 +61,33 @@ for i = 1:length(files)
     % target_freqs correspond to local frequency scale (e.g. 1.0 -> target_freq)
     freq_scaling = 2 * pi * target_freqs(i); 
     amp_scaling = 1;
-    [SO_signal, ~, ~] = generate_SO_from_dat_file('2p5_cos_Derek', freq_scaling, amp_scaling, false);
+    [~, angular_freqs_SO, amps_SO] = generate_SO_from_dat_file('2p5_cos_Derek', freq_scaling, amp_scaling, false);
     
-    SO_theory = SO_signal(t);
+    % Apply theoretical filter to the SO signal
+    f_SO = angular_freqs_SO / (2 * pi);
+    H_k = rlc_data.H_opt(f_SO);
+    H_k = reshape(H_k, size(f_SO));
+    % shift for baseline gain:
+    H_k = H_k * 10^(rlc_data.P0_final / 20);
+    amps_filtered = amps_SO .* H_k;
     
-    % Calculate the time delay seen in the time plot to sync up the plots
-    exp_signal = CH1V * 300 - 1;
+    [SO_signal_filtered, ~, ~] = generate_signal_base(angular_freqs_SO, amps_filtered, false, false, false);
+    SO_theory = SO_signal_filtered(t);
+    
+    %% Sync and scale SO theory and experimental plots 
+    exp_signal = CH1V * 300 - 1; % Scaling from Derek's jupiter notebook
+    
+    % Align theoretical SO signal
     [r, lags] = xcorr(exp_signal, SO_theory);
     [~, max_idx] = max(r);
     delay_idx = lags(max_idx);
-    
-    % Shift the theoretical signal to sync with the experimental one
     SO_theory_aligned = circshift(SO_theory, delay_idx);
+    
+
     
     % Scale theoretical time-domain signal to align vertically
     p_so = polyfit(SO_theory_aligned, exp_signal, 1);
+    % Add scaling and DC shift:
     SO_theory_time = p_so(1) * SO_theory_aligned + p_so(2);
     
     % Compute theoretical FFT and normalize to fit the experimental measured FFT
@@ -83,7 +95,7 @@ for i = 1:length(files)
     fft_SO_theory_mag = abs(fft_SO_theory);
     fft_SO_theory_norm = 0.9 * fft_SO_theory_mag / max(fft_SO_theory_mag);
     
-    %% Calculate Zoom Window for Time Domain
+    %% Calculate Zoom Window for Time Domain plot
     % The signal has an envelope period T_env determined by the frequency step.
     % Base frequencies are [0.3, 0.4, 0.5, 0.6], step is 0.1.
     % Scaled frequency step is 0.1 * target_freqs(i).
@@ -112,35 +124,68 @@ for i = 1:length(files)
     t_lim_min = t(max(1, center_idx - margin));
     t_lim_max = t(min(N, center_idx + margin));
     
+    %% Align COS signal to the first peak of the SO in the window
+    idx_start = max(1, center_idx - margin);
+    idx_end = min(N, center_idx + margin);
+    
+    % Find peaks in the theoretical SO signal within the window to avoid noise issues
+    [red_pks, red_locs] = findpeaks(SO_theory_aligned(idx_start:idx_end));
+    
+    % Filter out small peaks (we want the prominent ones in the superoscillation cluster)
+    threshold = 0.5 * max(red_pks);
+    main_red_locs = red_locs(red_pks > threshold);
+    
+    if ~isempty(main_red_locs)
+        % Get the absolute index of the first prominent peak
+        first_red_peak_idx = idx_start - 1 + main_red_locs(1);
+        
+        % Find all true peaks in the blue signal (cosine), ignoring noise ripples
+        prominence_thresh = 0.5 * (max(CH2V) - min(CH2V));
+        [~, cos_locs] = findpeaks(smoothdata(CH2V, 'gaussian', 15), 'MinPeakProminence', prominence_thresh);
+        
+        if ~isempty(cos_locs)
+            % Find the closest cosine peak to the first red peak
+            [~, closest_idx] = min(abs(cos_locs - first_red_peak_idx));
+            
+            % Shift the cosine signal so its peak aligns with the first red peak
+            delay_idx_cos = first_red_peak_idx - cos_locs(closest_idx);
+            CH2V_aligned = circshift(CH2V, delay_idx_cos);
+        else
+            CH2V_aligned = CH2V; % Fallback
+        end
+    else
+        CH2V_aligned = CH2V; % Fallback
+    end
+    
     %% Plotting
     figure;
+    tlo = tiledlayout(2, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
     
     % Subplot 1: Time domain
-    subplot(2, 1, 1);
+    ax1 = nexttile;
     hold on;
     % Plot theoretical SO as dashed so it overlays nicely over experimental (removed from legend)
-    plot(t, exp_signal, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-    plot(t, CH2V + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}');
-    plot(t, SO_theory_time, ':', 'Color', [0.5 0 0], 'HandleVisibility', 'off');
+    h_so_time = plot(t, exp_signal, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
+    h_cos_time = plot(t, CH2V_aligned + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}');
+    plot(t, SO_theory_time, '-', 'Color', [0.5 0 0], 'HandleVisibility', 'off',LineWidth=2);
 
 
-    title(['\textbf{superoscillation at ', freq_labels{i}, '}']);
+    % title(['\textbf{superoscillation at ', freq_labels{i}, '}']);
     xlabel('\textbf{Time [s]}');
     ylabel('\textbf{Amplitude [V]}');
     xlim([t_lim_min, t_lim_max]);
-    ylim([-5, 5]);
-    legend('show');
+    ylim([-2.5, 3.5]);
     PlotUtils.styleAxes(gca);
     hold off;
     
     % Subplot 2: Frequency domain
-    subplot(2, 1, 2);
+    ax2 = nexttile;
     hold on;
 
     % Experimental notch filter response
-    plot(sa_freq, sa_V / 2.3, '-', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
+    h_filter = plot(sa_freq, sa_V / 2.3, '-', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
     % Theoretical notch filter response (dashed, removed from legend)
-    plot(theory_freq, theory_V / 2.3, ':', 'Color', [0.5 0.5 0.5], 'HandleVisibility', 'off');
+    plot(theory_freq, theory_V / 2.3, '-', 'Color', [0.5 0.5 0.5], 'HandleVisibility', 'off',LineWidth=1);
     
     % Experimental SO FFT
     plot(freqs, fft1_norm, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
@@ -153,7 +198,11 @@ for i = 1:length(files)
     ylabel('\textbf{Amplitude [V, scaled]}');
     xlim([0, 1e6]);
     ylim([0, 1]);
-    legend('show');
+    
+    % Create a single combined legend assigned to the tiledlayout
+    lgd_all = legend(ax1, [h_filter, h_so_time, h_cos_time], '\textbf{Filter}', '\textbf{SO}', '\textbf{COS}', 'Orientation', 'horizontal', 'Box', 'off');
+    lgd_all.Layout.Tile = 'south';
+    
     PlotUtils.styleAxes(gca);
     hold off;
 end

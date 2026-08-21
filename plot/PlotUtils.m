@@ -43,16 +43,17 @@ classdef PlotUtils
             set(groot, 'DefaultAxesYGrid', 'off');
         end
         
-        function styleAxes(ax, scale_y_factor)
+        function styleAxes(ax, scale_y_factor, scale_x_factor)
             % STYLEAXES Formats axis ticks dynamically in clean bold LaTeX and handles scaling.
             %   Applies bold LaTeX math formatting to X-ticks and Y-ticks. Optionally
-            %   scales Y-ticks with a multiplier and places an appropriate exponent label.
+            %   scales Y-ticks and X-ticks with a multiplier and places an appropriate exponent label.
             
             if nargin < 1 || isempty(ax)
                 ax = gca;
             end
             
-            auto_scale = (nargin < 2 || isempty(scale_y_factor));
+            auto_scale_y = (nargin < 2 || isempty(scale_y_factor));
+            auto_scale_x = (nargin < 3 || isempty(scale_x_factor));
             
             % Ensure basic properties are set correctly on the axes
             ax.TickLabelInterpreter = 'latex';
@@ -73,8 +74,45 @@ classdef PlotUtils
                 % If DefaultLegendFontSize is not set, do nothing
             end
             
-            % Format dynamically generated ticks in bold LaTeX for X-axis.
-            xtickformat(ax, '$\\mathbf{%g}$');
+            % Handle X-axis scaling and formatting
+            x_axes = ax.XAxis;
+            for i = 1:length(x_axes)
+                x_axes(i).TickLabelFormat = '$\\mathbf{%g}$';
+                drawnow;
+                
+                % --- SNAP LIMITS TO TICKS ---
+                ticks = x_axes(i).TickValues;
+                if length(ticks) >= 2
+                    step = ticks(2) - ticks(1);
+                    lims = x_axes(i).Limits;
+                    new_min = floor(lims(1) / step) * step;
+                    new_max = ceil(lims(2) / step) * step;
+                    x_axes(i).Limits = [new_min, new_max];
+                    x_axes(i).TickValues = new_min:step:new_max;
+                end
+                
+                if auto_scale_x
+                    max_val = max(abs(x_axes(i).TickValues));
+                    if max_val > 0 && (max_val <= 0.1 || max_val >= 1000)
+                        k_x = floor(log10(max_val));
+                    else
+                        k_x = 0;
+                    end
+                else
+                    k_x = round(log10(scale_x_factor));
+                end
+                
+                if k_x ~= 0
+                    x_axes(i).Exponent = 0;
+                    ticks = x_axes(i).TickValues;
+                    scaled_ticks = ticks / (10^k_x);
+                    x_axes(i).TickLabels = arrayfun(@(v) sprintf('$\\mathbf{%g}$', v), scaled_ticks, 'UniformOutput', false);
+                    exponent_str = sprintf('\\times 10^{%d}', k_x);
+                    PlotUtils.addExponent(ax, exponent_str, 'x');
+                else
+                    x_axes(i).Exponent = 0;
+                end
+            end
             
             % Handle Y-axis scaling and formatting per axis (supports yyaxis)
             y_axes = ax.YAxis;
@@ -101,7 +139,7 @@ classdef PlotUtils
                 % ----------------------------
                 
                 % Determine exponent k
-                if auto_scale
+                if auto_scale_y
                     max_val = max(abs(y_axes(i).TickValues));
                     if max_val > 0 && (max_val <= 0.1 || max_val >= 1000)
                         k = floor(log10(max_val));
@@ -138,30 +176,86 @@ classdef PlotUtils
             end
         end
         
-        function addExponent(ax, exponent_str, axis_side)
-            % ADDEXPONENT Places a custom LaTeX exponent label at the top of the plot area.
+        function addExponent(ax, exponent_str, axis_loc)
+            % ADDEXPONENT Places a custom LaTeX exponent label.
             
             if nargin < 1 || isempty(ax)
                 ax = gca;
             end
             if nargin < 3
-                axis_side = 'left';
+                axis_loc = 'left';
             end
             
-            if strcmpi(axis_side, 'right')
-                x_pos = 1;
-                h_align = 'right';
-            else
-                x_pos = 0;
-                h_align = 'left';
+            switch lower(axis_loc)
+                case 'right'
+                    try
+                        x_pos = ax.YAxis(2).Label.Position(1);
+                    catch
+                        x_pos = ax.XLim(2);
+                    end
+                    y_pos = ax.YLim(2);
+                    h_align = 'center';
+                    v_align = 'bottom';
+                    txt_units = 'data';
+                case 'left'
+                    x_pos = ax.YAxis(1).Label.Position(1);
+                    y_pos = ax.YLim(2);
+                    h_align = 'center';
+                    v_align = 'bottom';
+                    txt_units = 'data';
+                case 'x'
+                    % Position the exponent at the same horizontal line as the x-axis title
+                    % using data units so it tracks dynamically when figure is resized/exported.
+                    x_pos = ax.XLim(2);
+                    y_pos = ax.XLabel.Position(2);
+                    h_align = 'right';
+                    v_align = ax.XLabel.VerticalAlignment;
+                    txt_units = 'data';
+                otherwise
+                    x_pos = 0;
+                    y_pos = 1.02;
+                    h_align = 'left';
+                    v_align = 'bottom';
+                    txt_units = 'normalized';
             end
             
-            text(ax, x_pos, 1.02, sprintf('$\\mathbf{%s}$', exponent_str), ...
-                'Units', 'normalized', ...
+            txt = text(ax, x_pos, y_pos, sprintf('$\\mathbf{%s}$', exponent_str), ...
+                'Units', txt_units, ...
                 'Interpreter', 'latex', ...
-                'FontSize', ax.FontSize, ...
+                'FontSize', max(1, ax.FontSize ), ...
                 'HorizontalAlignment', h_align, ...
-                'VerticalAlignment', 'bottom');
+                'VerticalAlignment', v_align);
+                
+            if strcmpi(axis_loc, 'x') || strcmpi(axis_loc, 'left') || strcmpi(axis_loc, 'right')
+                % Add MarkedClean listener to perfectly track layout changes (like label additions or export resizes)
+                addlistener(ax, 'MarkedClean', @(src, ev) PlotUtils.updateExponentPos(txt, ax, axis_loc));
+            end
+        end
+        
+        function updateExponentPos(txt, ax, axis_loc)
+            % UPDATEEXPONENTPOS Safely updates the position of the exponent labels
+            if isvalid(txt) && isvalid(ax)
+                try
+                    if strcmpi(axis_loc, 'x')
+                        new_pos = [ax.XLim(2), ax.XLabel.Position(2), 0];
+                    elseif strcmpi(axis_loc, 'left')
+                        new_pos = [ax.YAxis(1).Label.Position(1), ax.YLim(2), 0];
+                    elseif strcmpi(axis_loc, 'right')
+                        try
+                            new_pos = [ax.YAxis(2).Label.Position(1), ax.YLim(2), 0];
+                        catch
+                            new_pos = [ax.XLim(2), ax.YLim(2), 0];
+                        end
+                    else
+                        return;
+                    end
+                    
+                    if any(txt.Position ~= new_pos)
+                        txt.Position = new_pos;
+                    end
+                catch
+                end
+            end
         end
     end
 end

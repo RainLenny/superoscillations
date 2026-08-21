@@ -90,24 +90,20 @@ filtered_superoscillation = sampled_superoscillation;
 filtered_cos = zeros(size(cos1));
 
 figure;
+tlo = tiledlayout(2, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
+
 % Subplot 1: Superoscillating Signal
-subplot(2,1,1);
+ax1 = nexttile;
 hold on;
 plot(t_axis, real(sampled_superoscillation), '-', 'color', 'r', 'DisplayName', '\textbf{Original}');
 plot(t_axis, real(filtered_superoscillation), '--', 'color', 'b', 'DisplayName', '\textbf{Filtered}');
 title('\textbf{SO Signal}');
-lgd = legend('show', 'Orientation', 'horizontal');
 xlim([-12, 12]);
 PlotUtils.styleAxes(gca);
-% Position legend between the plots without resizing axes
-lgd.Units = 'normalized';
-drawnow;
-lgd.Position(1) = 0.905 - lgd.Position(3);
-lgd.Position(2) = 0.46;
 hold off;
 
 % Subplot 2: Cos Signal
-subplot(2,1,2);
+ax2 = nexttile;
 hold on;
 plot(t_axis, cos1, '-', 'color', 'r', 'DisplayName', '\textbf{Original}');
 plot(t_axis, filtered_cos, '--', 'color', 'b', 'DisplayName', '\textbf{Filtered}');
@@ -118,11 +114,10 @@ ylim([-1.2, 1.2]); % Adjust ylim for visibility of the zero line
 PlotUtils.styleAxes(gca);
 hold off;
 
-% Add shared y-axis label
-han = axes('visible', 'off'); 
-han.YLabel.Visible = 'on';
-ylabel(han, '\boldmath$\mathbf{Amplitude \ [arb.]}$');
-PlotUtils.styleAxes(han);
-han.Visible = 'off';
-han.YLabel.Visible = 'on';
+lgd = legend(ax1, 'show', 'Orientation', 'horizontal', 'Box', 'off');
+lgd.Layout.Tile = 'south';
 
+% Add shared y-axis label using native tiledlayout feature
+ylab = ylabel(tlo, '\boldmath$\mathbf{Amplitude \ [arb.]}$');
+ylab.FontSize = ax1.FontSize;
+ylab.Interpreter = 'latex';

@@ -148,8 +148,8 @@ function fit_RLC()
     disp('R_par (Ohms):'); disp(R_par_opt);
     fprintf('P0 = %g dB\n', P0_final);
     
-    % Calculate optimized transfer function
-    H_opt = calc_H(freq_full, R_opt, L_opt, C_opt, R_par_opt, R_L);
+    % Define optimized transfer function as a function of w
+    H_opt = @(w) calc_H(w, R_opt, L_opt, C_opt, R_par_opt, R_L);
     
     % Save values to file
     save('optimized_RLC.mat', 'R_opt', 'L_opt', 'C_opt', 'R_par_opt', 'P0_final', 'H_opt', 'freq_full');

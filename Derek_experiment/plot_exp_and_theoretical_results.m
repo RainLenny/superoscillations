@@ -165,8 +165,8 @@ for i = 1:length(files)
     ax1 = nexttile;
     hold on;
     % Plot theoretical SO as dashed so it overlays nicely over experimental (removed from legend)
-    h_so_time = plot(t, exp_signal, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-    h_cos_time = plot(t, CH2V_aligned + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}');
+    h_so_time = plot(t, exp_signal, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}',LineWidth=3);
+    h_cos_time = plot(t, CH2V_aligned + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}',LineWidth=3);
     plot(t, SO_theory_time, '-', 'Color', [0.5 0 0], 'HandleVisibility', 'off',LineWidth=2);
 
 
@@ -188,10 +188,10 @@ for i = 1:length(files)
     plot(theory_freq, theory_V / 2.3, '-', 'Color', [0.5 0.5 0.5], 'HandleVisibility', 'off',LineWidth=1);
     
     % Experimental SO FFT
-    plot(freqs, fft1_norm, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
+    plot(freqs, fft1_norm, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}',LineWidth=3);
     
     % Experimental COS FFT
-    plot(freqs, fft2_norm, '-o', 'Color', 'b', 'DisplayName', '\textbf{COS}');
+    plot(freqs, fft2_norm, '-o', 'Color', 'b', 'DisplayName', '\textbf{COS}',LineWidth=3);
     
     % title(['\textbf{', freq_labels{i}, ' vs. notch frequency response}']);
     xlabel('\textbf{Frequency [Hz]}');

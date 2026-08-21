@@ -129,26 +129,26 @@ for i = 1:length(files)
     idx_end = min(N, center_idx + margin);
     
     % Find peaks in the theoretical SO signal within the window to avoid noise issues
-    [red_pks, red_locs] = findpeaks(SO_theory_aligned(idx_start:idx_end));
+    [SO_pks, SO_locs] = findpeaks(SO_theory_aligned(idx_start:idx_end));
     
     % Filter out small peaks (we want the prominent ones in the superoscillation cluster)
-    threshold = 0.5 * max(red_pks);
-    main_red_locs = red_locs(red_pks > threshold);
+    threshold = 0.5 * max(SO_pks);
+    main_SO_locs = SO_locs(SO_pks > threshold);
     
-    if ~isempty(main_red_locs)
+    if ~isempty(main_SO_locs)
         % Get the absolute index of the first prominent peak
-        first_red_peak_idx = idx_start - 1 + main_red_locs(1);
+        first_SO_peak_idx = idx_start - 1 + main_SO_locs(1);
         
         % Find all true peaks in the blue signal (cosine), ignoring noise ripples
         prominence_thresh = 0.5 * (max(CH2V) - min(CH2V));
         [~, cos_locs] = findpeaks(smoothdata(CH2V, 'gaussian', 15), 'MinPeakProminence', prominence_thresh);
         
         if ~isempty(cos_locs)
-            % Find the closest cosine peak to the first red peak
-            [~, closest_idx] = min(abs(cos_locs - first_red_peak_idx));
+            % Find the closest cosine peak to the first SO peak
+            [~, closest_idx] = min(abs(cos_locs - first_SO_peak_idx));
             
             % Shift the cosine signal so its peak aligns with the first red peak
-            delay_idx_cos = first_red_peak_idx - cos_locs(closest_idx);
+            delay_idx_cos = first_SO_peak_idx - cos_locs(closest_idx);
             CH2V_aligned = circshift(CH2V, delay_idx_cos);
         else
             CH2V_aligned = CH2V; % Fallback

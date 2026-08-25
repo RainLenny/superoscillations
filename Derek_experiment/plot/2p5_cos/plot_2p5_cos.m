@@ -56,7 +56,7 @@ p2 = plot(t_axis, inst_freq_num, '-' ,'color', '#006400', 'DisplayName', '\textb
 ylabel('\boldmath$\mathbf{Inst. \ Freq. \ [\omega_0]}$');
 
 %green text
-yline(0.6, '--', 'Color', '#006400', 'LineWidth', 3, 'HandleVisibility', 'off');
+yline(0.6, '--', 'Color', '#006400', 'HandleVisibility', 'off');
 text(-23, 0.61, '\boldmath$\mathbf{\omega_{max}(SO)}$', 'Color', '#006400', 'Rotation', 90, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Interpreter', 'latex');
 
 ax = gca;
@@ -106,31 +106,22 @@ end
 
 hold off;
 
-%% Plot 2: SO zoom out
+%% Plot 2: SO zoom out and FFT
 
 figure;
+tlo = tiledlayout(2, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
 
+% Subplot 1: Time domain
+ax1 = nexttile;
+hold on;
 p1 = plot(t_axis, real(sampled_superoscillation), '-', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
-ax = gca;
-ax.YAxis(1).Color = 'k';
-
-
-
-
-xlim([-70,70]);
-
-legend('show', 'Location', 'best');
-
-set(gca, 'XColor', 'k');
-PlotUtils.styleAxes(gca);
-
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
+ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
+xlim([-70, 70]);
 
+PlotUtils.styleAxes(gca);
 hold off;
-
-
 
 %% FFT the signals
 N = length(t_axis);
@@ -139,17 +130,13 @@ freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 % Calculate FFT and normalize by N for true amplitude
 fft_superoscillation = fftshift(abs(fft(sampled_superoscillation,N))) / N;
 
-
-
-
-
-%% Plot 2: SO FFT
-figure;
+% Subplot 2: Frequency domain
+ax2 = nexttile;
 hold on;
 h1 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
 
 % 2. Vertical reference line & Annotation
-xline(1.0, 'Color', 'black','LineWidth', 6);
+xline(1.0, 'Color', 'black', LineWidth=6);
 text(1, 25, '\boldmath$\mathbf{\omega_0}$', ...
     'Color', 'k', 'FontSize', 18, 'Rotation', 90, ...
     'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
@@ -158,17 +145,11 @@ text(1, 25, '\boldmath$\mathbf{\omega_0}$', ...
 xlabel('\boldmath$\mathbf{Angular \ frequency \ [\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
 
-legend([h1]);
-grid off;
-xlim([0,1.1])
-% ylim([0,36])
+xlim([0, 1.1]);
 
-set(gca, 'XColor', 'k');
 PlotUtils.styleAxes(gca);
-
-% % Reduce the number of y-ticks
-% ax = gca;
-% current_yticks = yticks;
-% yticks(current_yticks(1:2:end));
-
 hold off;
+
+% Create a single combined legend assigned to the tiledlayout
+lgd_all = legend(ax1, [p1], '\textbf{SO}', 'Orientation', 'horizontal', 'Box', 'off');
+lgd_all.Layout.Tile = 'south';

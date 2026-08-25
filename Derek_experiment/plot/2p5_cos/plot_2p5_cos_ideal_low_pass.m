@@ -36,32 +36,38 @@ freq_axis = linspace(-f_sampling/2, f_sampling/2, N)*2*pi; % Frequency axis
 fft_superoscillation = fftshift(abs(fft(sampled_superoscillation, N)))*dt;
 fft_cos = fftshift(abs(fft(cos1, N)))*dt;
 
-% Normalize by the number of samples (N) to get true Fourier coefficients
-fft_superoscillation = fft_superoscillation / (sum(fft_superoscillation));
-fft_cos = fft_cos / (sum(fft_cos));
+% % Normalize by the number of samples (N) to get true Fourier coefficients
+% fft_superoscillation = fft_superoscillation / (sum(fft_superoscillation));
+% fft_cos = fft_cos / (sum(fft_cos));
+
+fft_superoscillation = 0.9 * fft_superoscillation / max(fft_superoscillation);
+fft_cos = 0.9 * fft_cos / max(fft_cos);
 
 
-%% Figure (a): The signals and the ideal filter in the time domain.
+%% Figure (a): The signals and the ideal filter in time and frequency domains.
 figure;
+tlo = tiledlayout(2, 1, 'TileSpacing', 'compact', 'Padding', 'compact');
+
+% Subplot 1: Time domain
+ax1 = nexttile;
 hold on;
 % Scale filter to have similar amplitude to signals for visualization
 filter_time = (0.7/pi) * sinc(0.7 * t_axis / pi);
 filter_time = filter_time / max(filter_time) ; % scale factor to match image roughly
 
-plot(t_axis, real(sampled_superoscillation), '-', 'color', 'r', 'DisplayName', '\textbf{SO}');
-plot(t_axis, cos1, ':', 'color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{\omega_0}$}');
-plot(t_axis, filter_time, '-.', 'color', 'k', 'DisplayName', '\textbf{Filter}');
+h_so_time = plot(t_axis, real(sampled_superoscillation), '-', 'color', 'r', 'DisplayName', '\textbf{SO}');
+h_cos_time = plot(t_axis, cos1, ':', 'color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{\omega_0}$}');
+h_filter_time = plot(t_axis, filter_time, '-.', 'color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [arb.]}$');
-legend('show');
 xlim([-8, 8]);
 PlotUtils.styleAxes(gca);
 hold off;
 
 
-%% Figure (b): The signals and the ideal filter on the frequency domain.
-figure;
+% Subplot 2: Frequency domain
+ax2 = nexttile;
 hold on;
 % Filter in frequency domain: Rect function from -0.7 to 0.7
 filter_freq = double(abs(freq_axis) <= 0.7);
@@ -72,14 +78,15 @@ h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\
 h3 = plot(freq_axis, filter_freq, '--', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Frequency \ [\omega_0]}$');
-ylabel('\boldmath$\mathbf{Amplitude \ [norm.]}$');
-
-% Specify the legend order explicitly using the handles
-legend([h2, h1, h3]);
+ylabel('\boldmath$\mathbf{Amplitude \ [scaled]}$');
 
 xlim([0, 1.5]);
 PlotUtils.styleAxes(gca);
 hold off;
+
+% Create a single combined legend assigned to the tiledlayout
+lgd_all = legend(ax1, [h_filter_time, h_so_time, h_cos_time], '\textbf{Filter}', '\textbf{SO}', '\textbf{\boldmath$\mathbf{\omega_0}$}', 'Orientation', 'horizontal', 'Box', 'off');
+lgd_all.Layout.Tile = 'south';
 
 
 %% Figure (c): The signals filtered by the ideal filter.

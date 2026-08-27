@@ -41,7 +41,7 @@ for i = 1:length(sig_configs)
     h_arr(i) = plot(t_axis, real(sig_configs(i).sampled), '-', 'color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 legend(h_arr);
-
+xlim([100,400]);
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [arb]}$');
 

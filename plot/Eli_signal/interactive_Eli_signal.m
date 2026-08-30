@@ -2,16 +2,16 @@
 % Creates an interactive figure to plot the superoscillating signal and its
 % instantaneous frequency, as well as its frequency spectrum, with sliders for A, Omega, and delta.
 
-clear; clc; close all;
-
+% Removed clear; clc; to allow caller to set initial values
+% close all; % let the caller handle closing figures if they want
 %% Setup Path
 addpath(genpath(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
 PlotUtils.setupDefaults();
 
 %% Initial Parameters
-A_init = 10;
-Omega_init = 1.0;
-delta_init = 0.1;
+if ~exist('A_init', 'var'), A_init = 10; end
+if ~exist('Omega_init', 'var'), Omega_init = 1.0; end
+if ~exist('delta_init', 'var'), delta_init = 0.1; end
 
 % Time axis setup (using constants similar to plot_2p5_cos.m)
 f_sampling = 600/(2*pi);
@@ -35,11 +35,8 @@ else
     sampled_signal = signal_func(t_axis);
 end
 
-% Analytical instantaneous frequency calculation
-% Formula: Omega + [(A-1)*delta*(A*cos(delta*t) - (A-1))] / [A^2 + (A-1)^2 - 2A(A-1)cos(delta*t)]
-num = (A_init - 1) * delta_init .* (A_init .* cos(delta_init .* t_axis) - (A_init - 1));
-den = A_init^2 + (A_init - 1)^2 - 2 * A_init * (A_init - 1) .* cos(delta_init .* t_axis);
-inst_freq = Omega_init + num ./ den;
+% Analytical instantaneous frequency calculation using the general Fourier series function
+inst_freq = compute_instantaneous_frequency_analytical_fourier_series([A_init, -(A_init - 1)], [Omega_init, Omega_init - delta_init], t_axis);
 
 % Initial FFT computation (using a much longer time window and Hann window to produce sharp delta-like peaks)
 t_fft = (-1000 : dt : 1000).';
@@ -122,6 +119,7 @@ cb = @(es, ed) update_plot(sld_A, sld_Omega, sld_delta, txt_A, txt_Omega, txt_de
 addlistener(sld_A, 'ContinuousValueChange', cb);
 addlistener(sld_Omega, 'ContinuousValueChange', cb);
 addlistener(sld_delta, 'ContinuousValueChange', cb);
+fig.UserData.update_plot_cb = cb;
 
 %% Helper Functions
 
@@ -146,10 +144,8 @@ function update_plot(sld_A, sld_Omega, sld_delta, txt_A, txt_Omega, txt_delta, p
         sampled_signal = signal_func(t_axis);
     end
     
-    % Analytical instantaneous frequency calculation
-    num = (A - 1) * delta .* (A .* cos(delta .* t_axis) - (A - 1));
-    den = A^2 + (A - 1)^2 - 2 * A * (A - 1) .* cos(delta .* t_axis);
-    inst_freq = Omega + num ./ den;
+    % Analytical instantaneous frequency calculation using the general Fourier series function
+    inst_freq = compute_instantaneous_frequency_analytical_fourier_series([A, -(A - 1)], [Omega, Omega - delta], t_axis);
     
     % Recompute FFT (with zero padding and windowing on the long signal)
     if abs(sig_val_0) > 1e-10

@@ -56,9 +56,9 @@ z_out = linspace(L, 2*L, 300);
 
 % Initialize plot lines (Left Axis for Amplitude)
 yyaxis(ax3, 'left');
-p_in = plot(ax3, z_in, zeros(size(z_in)), 'b','LineStyle', '-',  'LineWidth', 1.5, 'DisplayName', 'Input Region (z < 0)');
-p_cav = plot(ax3, z_cav, zeros(size(z_cav)), 'r', 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', 'Inside Cavity (0 \leq z \leq L)');
-p_out = plot(ax3, z_out, zeros(size(z_out)), 'm', 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', 'Output Region (z > L)');
+p_in = plot(ax3, z_in, zeros(size(z_in)), 'b','LineStyle', '-',  'LineWidth', 1.5, 'DisplayName', 'Input Region');
+p_cav = plot(ax3, z_cav, zeros(size(z_cav)), 'r', 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', 'Inside Cavity');
+p_out = plot(ax3, z_out, zeros(size(z_out)), 'm', 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', 'Output Region');
 ylabel(ax3, '\boldmath$\mathbf{Re\{E(z,t)\}}$', 'Interpreter', 'latex');
 ax3.YAxis(1).Color = 'k';
 

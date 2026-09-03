@@ -81,14 +81,16 @@ classdef PlotUtils
                 drawnow;
                 
                 % --- SNAP LIMITS TO TICKS ---
-                ticks = x_axes(i).TickValues;
-                if length(ticks) >= 2
-                    step = ticks(2) - ticks(1);
-                    lims = x_axes(i).Limits;
-                    new_min = floor(lims(1) / step) * step;
-                    new_max = ceil(lims(2) / step) * step;
-                    x_axes(i).Limits = [new_min, new_max];
-                    x_axes(i).TickValues = new_min:step:new_max;
+                if strcmp(x_axes(i).LimitsMode, 'auto')
+                    ticks = x_axes(i).TickValues;
+                    if length(ticks) >= 2
+                        step = ticks(2) - ticks(1);
+                        lims = x_axes(i).Limits;
+                        new_min = floor(lims(1) / step) * step;
+                        new_max = ceil(lims(2) / step) * step;
+                        x_axes(i).Limits = [new_min, new_max];
+                        x_axes(i).TickValues = new_min:step:new_max;
+                    end
                 end
                 
                 if auto_scale_x
@@ -124,17 +126,19 @@ classdef PlotUtils
                 % --- SNAP LIMITS TO TICKS ---
                 % This ensures the vertical axis line ends exactly on a tick mark 
                 % (giving it the clean "small horizontal line" cap at the top).
-                ticks = y_axes(i).TickValues;
-                if length(ticks) >= 2
-                    step = ticks(2) - ticks(1);
-                    lims = y_axes(i).Limits;
-                    
-                    % Snap min and max to the nearest outward tick step
-                    new_min = floor(lims(1) / step) * step;
-                    new_max = ceil(lims(2) / step) * step;
-                    
-                    y_axes(i).Limits = [new_min, new_max];
-                    y_axes(i).TickValues = new_min:step:new_max;
+                if strcmp(y_axes(i).LimitsMode, 'auto')
+                    ticks = y_axes(i).TickValues;
+                    if length(ticks) >= 2
+                        step = ticks(2) - ticks(1);
+                        lims = y_axes(i).Limits;
+                        
+                        % Snap min and max to the nearest outward tick step
+                        new_min = floor(lims(1) / step) * step;
+                        new_max = ceil(lims(2) / step) * step;
+                        
+                        y_axes(i).Limits = [new_min, new_max];
+                        y_axes(i).TickValues = new_min:step:new_max;
+                    end
                 end
                 % ----------------------------
                 

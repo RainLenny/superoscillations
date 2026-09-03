@@ -56,8 +56,8 @@ p2 = plot(t_axis, inst_freq_num, '-' ,'color', '#006400', 'DisplayName', '\textb
 ylabel('\boldmath$\mathbf{Inst. \ Freq. \ [\omega_0]}$');
 
 %green text
-yline(0.6, '--', 'Color', '#006400', 'HandleVisibility', 'off');
-text(-23, 0.61, '\boldmath$\mathbf{\omega_{max}(SO)}$', 'Color', '#006400', 'Rotation', 90, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Interpreter', 'latex');
+yline(0.6, '--', 'Color', '#006400', 'HandleVisibility', 'off',LineWidth=3);
+text(18, 0.61, '\boldmath$\mathbf{\omega_{max}(SO)}$', 'Color', '#006400', 'Rotation', 90, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Interpreter', 'latex');
 
 ax = gca;
 ax.YAxis(2).Color = 'k';
@@ -73,7 +73,7 @@ elseif any(mask_so)
 end
 
 xlabel('\boldmath$\mathbf{Time \ [2\pi/\omega_0]}$');
-xlim([-27,27]);
+xlim([-23,23]);
 
 legend('show', 'Location', 'best');
 

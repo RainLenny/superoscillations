@@ -1,4 +1,4 @@
-function [tgrid, Pe, Ce, Cg] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, Ce0)
+function [tgrid, Pe, Ce, Cg] = JC_drive_only(nu0, Jtot, eff_drive, tspan, Ce0)
 %JC_DRIVE_ONLY Solve two-level dynamics for a driven JC system.
 %
 %   [tgrid, Pe, Ce, Cg] = JC_DRIVE_ONLY(nu0, Jtot, Drive_integral, tspan, Ce0)
@@ -25,13 +25,11 @@ function [tgrid, Pe, Ce, Cg] = JC_drive_only(nu0, Jtot, Drive_integral, tspan, C
 
     Cg0 = sqrt(1 - abs(Ce0)^2);
 
-    % Effective drive
-    f = @(t) -1i * Drive_integral(t) .* exp(1i * nu0 * t);
 
     % Two-level ODE: d/dt [Ce; Cg] = -i [0 f; f* 0] [Ce; Cg]
     odefun = @(t, C) [ ...
-        -1i * Jtot * f(t)        * C(2);  % dCe/dt
-        -1i * Jtot * conj(f(t))  * C(1)   % dCg/dt
+        -1 * Jtot *  exp(1i * nu0 * t) * eff_drive(t) * C(2);  % dCe/dt
+        Jtot *  exp( -1i * nu0 * t) * conj(eff_drive(t)) * C(1)   % dCg/dt
     ];
 
     opts = odeset('RelTol', 100 * eps, 'AbsTol', 1e-20);

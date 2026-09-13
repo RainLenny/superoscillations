@@ -75,7 +75,7 @@ filter_freq = double(abs(freq_axis) <= 0.7);
 % Assign handles to each plot
 h1 = plot(freq_axis, fft_cos, '-o', 'Color', 'b', 'DisplayName', '\textbf{\boldmath$\mathbf{\omega_0}$}');
 h2 = plot(freq_axis, fft_superoscillation, '-o', 'Color', 'r', 'DisplayName', '\textbf{SO}');
-h3 = plot(freq_axis, filter_freq, '--', 'Color', 'k', 'DisplayName', '\textbf{Filter}');
+h3 = plot(freq_axis, filter_freq, 'Color', 'k', 'DisplayName', '\textbf{Filter}');
 
 xlabel('\boldmath$\mathbf{Frequency \ [\omega_0]}$');
 ylabel('\boldmath$\mathbf{Amplitude \ [scaled]}$');

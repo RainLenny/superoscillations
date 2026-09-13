@@ -23,9 +23,6 @@ nu0_TLS2 = 1.01;
 signal_scaling = 7;
 
 [SO_signal_Baranov, angular_freqs_SO_Baranov] = generate_SO_from_dat_file("SO_baranov", 1, signal_scaling);
-[SO_signal_flat, angular_freqs_SO_flat] = generate_equal_spread(angular_freqs_SO_Baranov, 1, signal_scaling);
-[Cos_signal, angular_freqs_COS] = generate_Cos_reference(0.9);
-[Cos_resonant_signal, angular_freqs_COS_resonant] = generate_Cos_reference(1);
 
 sig_configs = struct('name', {}, 'data', {}, 'color', {}, 'freqs', {});
 
@@ -34,20 +31,16 @@ sig_configs(1).name = '\textbf{SO Baranov}';
 sig_configs(1).data = SO_signal_Baranov;
 sig_configs(1).freqs = angular_freqs_SO_Baranov;
 
-% --- Add Signal 2 ---
-sig_configs(2).name = '\textbf{flat spectrum}';
-sig_configs(2).data = SO_signal_flat;
-sig_configs(2).freqs = angular_freqs_SO_flat;
-
-% --- Add Signal 3 ---
-sig_configs(3).name = '\boldmath$\mathrm{0.9\omega_0}$';
-sig_configs(3).data = Cos_signal;
-sig_configs(3).freqs = angular_freqs_COS;
-
-% --- Add Signal 4 ---
-sig_configs(4).name = '\boldmath$\mathrm{\omega_0}$';
-sig_configs(4).data = Cos_resonant_signal;
-sig_configs(4).freqs = angular_freqs_COS_resonant;
+% --- Add Cosine signals for each frequency in the SO signal ---
+for k = 1:length(angular_freqs_SO_Baranov)
+    freq = angular_freqs_SO_Baranov(k);
+    [cos_sig, cos_freq] = generate_Cos_reference(freq);
+    
+    idx = length(sig_configs) + 1;
+    sig_configs(idx).name = sprintf('\\boldmath$\\mathbf{%g}\\omega_0$', freq);
+    sig_configs(idx).data = cos_sig;
+    sig_configs(idx).freqs = cos_freq;
+end
 
 % Normalize both signals symbolically by the peak of the first signal
 sig_configs = normalize_sig_configs(sig_configs, 'peak');
@@ -116,12 +109,15 @@ for comp = 1:3
              'DisplayName', sig_configs(i).name);
     end
 
-    title(['Distinguishability J for ' component_labels{comp}]);
-    xlabel('Integration Limit T_2');
-    ylabel('J Parameter');
+    title(['\textbf{Distinguishability J for } \boldmath$' component_labels{comp} '$']);
+    xlabel('\textbf{Integration Limit } \boldmath$T_2$');
+    ylabel('\textbf{J Parameter}');
     grid on;
-    legend('Location', 'best', 'Interpreter', 'latex');
+    legend('Location', 'best');
     xlim([T1_integ t_span(2)]);
+    if exist('PlotUtils', 'class')
+        PlotUtils.styleAxes(gca);
+    end
 end
 
 % --- Plot rho_i in separate figures (3 figures) ---
@@ -136,19 +132,22 @@ for comp = 1:3
 
         % Solid line for TLS1, matching signal color
         plot(t_common, r_tls1, 'Color', sig_configs(i).color, 'LineWidth', lw, ...
-            'DisplayName', sprintf('%s (TLS1)', sig_configs(i).name));
+            'DisplayName', sprintf('%s \\textbf{(TLS1)}', sig_configs(i).name));
         
         % Dashed line for TLS2, matching signal color
         plot(t_common, r_tls2, '--', 'Color', sig_configs(i).color, 'LineWidth', lw, ...
-            'DisplayName', sprintf('%s (TLS2)', sig_configs(i).name));
+            'DisplayName', sprintf('%s \\textbf{(TLS2)}', sig_configs(i).name));
     end
 
-    title(['Time-domain trajectories for ' component_labels{comp}]);
-    xlabel('Time t');
-    ylabel(['Component ' component_labels{comp}]);
+    title(['\textbf{Time-domain trajectories for } \boldmath$' component_labels{comp} '$']);
+    xlabel('\textbf{Time } \boldmath$t$');
+    ylabel(['\textbf{Component } \boldmath$' component_labels{comp} '$']);
     grid on;
-    legend('Location', 'best', 'Interpreter', 'latex');
+    legend('Location', 'best');
     xlim(t_span);
+    if exist('PlotUtils', 'class')
+        PlotUtils.styleAxes(gca);
+    end
 end
 
 % --- Plot all input signals (Time Domain) ---
@@ -161,11 +160,11 @@ for i = 1:length(sig_configs)
         'DisplayName', sig_configs(i).name);
 end
 
-xlabel('\boldmath$\mathrm{Time \ [2\pi/\omega_0]}$', 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
-title('Time-domain comparison of all input signals');
+xlabel('\textbf{Time } \boldmath$[2\pi/\omega_0]$');
+ylabel('\textbf{Amplitude [arb]}');
+title('\textbf{Time-domain comparison of all input signals}');
 grid on;
-legend('Location', 'best', 'Interpreter', 'latex');
+legend('Location', 'best');
 xlim(t_span);
 if exist('PlotUtils', 'class')
     PlotUtils.styleAxes(gca);
@@ -205,8 +204,11 @@ for i = 1:length(sig_configs)
         'DisplayName', sig_configs(i).name);
 end
 
-xlabel('\boldmath$\mathrm{Angular \ frequency \ [\omega_0]}$', 'Interpreter', 'latex');
-ylabel('\boldmath$\mathrm{Amplitude \ [arb]}$', 'Interpreter', 'latex');
-title('Frequency-domain comparison of all input signals');
+xlabel('\textbf{Angular frequency } \boldmath$[\omega_0]$');
+ylabel('\textbf{Amplitude [arb]}');
+title('\textbf{Frequency-domain comparison of all input signals}');
 grid on;
-legend('Location', 'best', 'Interpreter', 'latex');
+legend('Location', 'best');
+if exist('PlotUtils', 'class')
+    PlotUtils.styleAxes(gca);
+end

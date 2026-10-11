@@ -62,7 +62,7 @@ figure;
 hold on;
 
 h_arr_fft = gobjects(1, length(sig_configs));
-for i = 1:length(sig_configs)
+for i = length(sig_configs):-1:1
     h_arr_fft(i) = plot(freq_axis, sig_configs(i).fft_mag, '-', 'Color', sig_configs(i).color, 'DisplayName', sig_configs(i).name);
 end
 legend(h_arr_fft);

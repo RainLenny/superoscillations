@@ -55,7 +55,7 @@ function fit_RLC()
     tol_L = 0.10; % +/- 10% for inductors (including lead/core parasitics)
     tol_C = 0.10; % +/- 10% for capacitors (including stray capacitance)
 
-    lb_R0   = 0.1;                      ub_R0   = 5.0;
+    lb_R0   = 0.1;                      ub_R0   = 100;
     lb_R    = (1 - tol_R) * R_meas;     ub_R    = (1 + tol_R) * R_meas;
     lb_L    = (1 - tol_L) * L_meas;     ub_L    = (1 + tol_L) * L_meas;
     lb_C    = (1 - tol_C) * C_meas;     ub_C    = (1 + tol_C) * C_meas;

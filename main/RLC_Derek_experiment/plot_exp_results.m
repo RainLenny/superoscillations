@@ -1,8 +1,6 @@
 clear; clc;
 
 %% Importing signals
-% Add project root and all subfolders to search path
-addpath(genpath(fileparts(mfilename('fullpath'))));
 PlotUtils.setupDefaults();
 
 % Folder paths

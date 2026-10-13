@@ -1,8 +1,6 @@
 clear; clc;
 
 %% Importing signals
-% Add project root and all subfolders to search path
-addpath(genpath(fileparts(mfilename('fullpath'))));
 PlotUtils.setupDefaults();
 
 % Folder paths
@@ -26,11 +24,14 @@ theory_dB = 20*log10(abs(rlc_data.H_opt(theory_freq))) + rlc_data.P0_final;
 theory_V = 10.^(theory_dB / 20);
 
 %% Setup variables for looping over notch data
-files = {'notch_400khz1.csv', 'notch_500khz1.csv', 'notch_600khz0.csv', 'notch_800khz0.csv'};
-freq_labels = {'400 kHz', '500 kHz', '600 kHz', '800 kHz'};
-target_freqs = [400e3, 500e3, 600e3, 800e3]; % Corresponding base frequencies
+files = {'notch_400khz1.csv', '550_memory0.csv', 'notch_600khz0.csv', 'notch_800khz0.csv'};
+freq_labels = {'400 kHz', '550 kHz', '600 kHz', '800 kHz'};
+target_freqs = [400e3, 550e3, 600e3, 800e3]; % Corresponding base frequencies
 
-tInc = 1e-9; % Time increment as used in python notebook
+% Time increment per file.
+% 550_memory0.csv is trimmed to 4 full periods (40 cosine cycles) in 145,455 samples,
+% which corresponds to tInc = 0.5e-9 s (0.5 ns) to represent 550 kHz.
+tIncs = [1e-9, 0.5e-9, 1e-9, 1e-9];
 
 for i = 1:length(files)
     %% Load superoscillation data
@@ -42,6 +43,7 @@ for i = 1:length(files)
     CH2V = data(:, 2);
     
     N = length(CH1V);
+    tInc = tIncs(i);
     t = (0:N-1)' * tInc;
     
     %% Compute experimental FFT
@@ -77,11 +79,11 @@ for i = 1:length(files)
     %% Sync and scale SO theory and experimental plots 
     exp_signal = CH1V * 300 - 1; % Scaling from Derek's jupiter notebook
     
-    % Align theoretical SO signal
+    % Align theoretical SO signal analytically (avoids circshift wraparound artifacts when N is not an integer multiple of T_env)
     [r, lags] = xcorr(exp_signal, SO_theory);
     [~, max_idx] = max(r);
     delay_idx = lags(max_idx);
-    SO_theory_aligned = circshift(SO_theory, delay_idx);
+    SO_theory_aligned = SO_signal_filtered(t - delay_idx * tInc);
     
 
     
@@ -166,7 +168,7 @@ for i = 1:length(files)
     hold on;
     % Plot theoretical SO as dashed so it overlays nicely over experimental (removed from legend)
     h_so_time = plot(t, exp_signal, '-', 'Color', 'r', 'DisplayName', '\textbf{SO}',LineWidth=3);
-    h_cos_time = plot(t, CH2V_aligned + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}',LineWidth=3);
+    h_cos_time = plot(t, (CH2V_aligned / max(abs(CH2V_aligned))) + 2.5, '-', 'Color', 'b', 'DisplayName', '\textbf{COS}',LineWidth=3);
     plot(t, SO_theory_time, '-', 'Color', [0.5 0 0], 'HandleVisibility', 'off',LineWidth=2);
 
 

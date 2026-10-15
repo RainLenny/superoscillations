@@ -1,117 +1,101 @@
 %% fit_RLC.m
-% Fit RLC notch filter parameters to experimental spectrum analyzer data (sa_notch.csv).
-% Optimization window: 200 kHz - 800 kHz.
-%
-% Circuit topology:
-%   Z_branch = i*omega*L + 1/(i*omega*C) + R_par
-%   Z = Z_branch || R_L = (Z_branch * R_L) / (Z_branch + R_L)
-%   H(i*omega) = V_out / V_in = Z / (R + Z)
-%
-% Output:
-%   Generates 'optimized_RLC.mat' containing:
-%   'R0_opt', 'R_opt', 'L_opt', 'C_opt', 'R_par_opt', 'P0_final', 'H_opt', 'freq_full', 'R_L'
+% Optimizes RLC notch filter parameters against experimental spectrum analyzer data.
+% Enforces exact resonant frequency matching and removes resistor degeneracy.
+clear; clc; close all;
 
-clear; clc;
-
-%% 1. Path Setup & Load Experimental Data
+%% 1. Paths & Data Loading
 script_dir = fileparts(mfilename('fullpath'));
-data_file  = fullfile(script_dir, 'data', 'sa_notch.csv');
-mat_file   = fullfile(script_dir, 'optimized_RLC.mat');
+addpath(genpath(fileparts(fileparts(script_dir))));
+if exist('PlotUtils', 'class'), PlotUtils.setupDefaults(); end
 
-% Read spectrum analyzer data (skip 34 header lines, remove trailing metadata)
-raw_data = readmatrix(data_file, 'NumHeaderLines', 34);
-valid_idx = ~isnan(raw_data(:, 1)) & ~isnan(raw_data(:, 2));
-freq_full = raw_data(valid_idx, 1);
-dB_full   = raw_data(valid_idx, 2);
+data_file = fullfile(script_dir, 'data', 'sa_notch.csv');
+mat_file  = fullfile(script_dir, 'optimized_RLC.mat');
 
-%% 2. Define Fitting Range (200 kHz to 800 kHz)
-fit_mask = (freq_full >= 200e3) & (freq_full <= 800e3);
-f_fit    = freq_full(fit_mask);
-dB_fit   = dB_full(fit_mask);
+raw_data  = readmatrix(data_file, 'NumHeaderLines', 34);
+freq_full = raw_data(1:end-6, 1);
+sa_dB     = raw_data(1:end-6, 2);
 
-%% 3. Nominal Circuit Components & Physical Bounds
-% Given component specifications:
-R0        = 46.4;     % Resistor [Ohm]
-L0        = 100e-6;   % Inductor [H] (100 uH)
-C0        = 870e-12;  % Capacitor [F] (870 pF)
-R_L0      = 50;       % Load resistor [Ohm]
-R_par_max = 20;       % Max parasitic resistance [Ohm]
+up_fit_bound = 700e3;
+low_fit_bound = 200e3;
+fit_mask  = (freq_full >= low_fit_bound) & (freq_full <= up_fit_bound);
+f_fit     = freq_full(fit_mask);
+dB_fit    = sa_dB(fit_mask);
 
-% Component bounds:
-lb = [0.8 * R0, 0.8 * L0, 0.8 * C0, 0, 0.8 * R_L0];
-ub = [500 * R0, 1.2 * L0, 1.2 * C0, R_par_max, 1.2 * R_L0];
+%% 2. Exact Experimental Resonance & Capacitance Lock
+[~, idx_min] = min(dB_fit);
+win_idx      = max(1, idx_min-3) : min(numel(f_fit), idx_min+3);
 
-%% 4. Circuit Transfer Function Formulation
-% Z_branch = i*omega*L + 1/(i*omega*C) + R_par
-% Z = Z_branch || R_L
-% H(i*omega) = Z / (R + Z)
-calc_H = @(f, R, L, C, R_par, RL) ...
-    (( (1j*2*pi*f*L + 1./(1j*2*pi*f*C) + R_par) .* RL ) ./ ...
-     ( (1j*2*pi*f*L + 1./(1j*2*pi*f*C) + R_par) + RL )) ./ ...
-    ( R + (( (1j*2*pi*f*L + 1./(1j*2*pi*f*C) + R_par) .* RL ) ./ ...
-          ( (1j*2*pi*f*L + 1./(1j*2*pi*f*C) + R_par) + RL )) );
+if numel(win_idx) >= 3
+    poly_c    = polyfit(f_fit(win_idx), dB_fit(win_idx), 2);
+    f_res_exp = -poly_c(2) / (2 * poly_c(1));
+    dB_min    = polyval(poly_c, f_res_exp);
+else
+    f_res_exp = f_fit(idx_min);
+    dB_min    = dB_fit(idx_min);
+end
 
-%% 5. Bounded Optimization (Nelder-Mead with Variable Transformation)
-% Smooth trigonometric parameter mapping: p = lb + (ub - lb) * (sin(theta) + 1)/2
-to_param = @(theta) lb + (ub - lb) .* (sin(theta) + 1) / 2;
-to_theta = @(p) asin(min(max(2 * (p - lb) ./ (ub - lb) - 1, -1), 1));
+calc_C = @(inductance) 1 ./ ((2 * pi * f_res_exp)^2 .* inductance);
 
-% Initial guess (centered in allowable range)
-p_init     = [R0, L0, C0, 2.5, R_L0];
-theta_init = to_theta(p_init);
+%% 3. Fixed Parameters & Optimization Bounds for Active Variables [L, R_par, P0]
+[R_1_fixed, R_2_fixed, R_L_fixed] = deal(50.0);
+R_eq        = (R_1_fixed * (R_2_fixed + R_L_fixed)) / (R_1_fixed + R_2_fixed + R_L_fixed);
+dB_pass_est = max(dB_fit);
 
-% Objective function: RMSE in dB with analytical baseline offset P0
-cost_fun = @(theta) norm( ...
-    ( 20*log10(abs(calc_H(f_fit, ...
-        lb(1) + (ub(1)-lb(1))*(sin(theta(1))+1)/2, ...
-        lb(2) + (ub(2)-lb(2))*(sin(theta(2))+1)/2, ...
-        lb(3) + (ub(3)-lb(3))*(sin(theta(3))+1)/2, ...
-        lb(4) + (ub(4)-lb(4))*(sin(theta(4))+1)/2, ...
-        lb(5) + (ub(5)-lb(5))*(sin(theta(5))+1)/2))) + ...
-      mean(dB_fit - 20*log10(abs(calc_H(f_fit, ...
-        lb(1) + (ub(1)-lb(1))*(sin(theta(1))+1)/2, ...
-        lb(2) + (ub(2)-lb(2))*(sin(theta(2))+1)/2, ...
-        lb(3) + (ub(3)-lb(3))*(sin(theta(3))+1)/2, ...
-        lb(4) + (ub(4)-lb(4))*(sin(theta(4))+1)/2, ...
-        lb(5) + (ub(5)-lb(5))*(sin(theta(5))+1)/2)))) ) - dB_fit );
+R_par_init = R_eq / (10^((dB_pass_est - dB_min) / 20) - 1);
+P0_init    = dB_pass_est - 20 * log10(R_L_fixed / (R_1_fixed + R_2_fixed + R_L_fixed));
 
-opts = optimset('Display', 'notify', 'TolX', 1e-6, 'TolFun', 1e-6, ...
-                'MaxFunEvals', 40000, 'MaxIter', 40000);
-theta_opt = fminsearch(cost_fun, theta_init, opts);
-p_opt     = to_param(theta_opt);
+vars_lb   = [80.0e-6,  2.0, 10.0];
+vars_ub   = [120.0e-6, 30.0, 25.0];
+vars_init = [100.0e-6, min(max(R_par_init, 5.0), 25.0), min(max(P0_init, 10.0), 25.0)];
 
-%% 6. Extract Optimized Parameters
-R_opt     = p_opt(1);
-R0_opt    = R_opt;           % Canonical alias for series resistor
-L_opt     = p_opt(2);
-C_opt     = p_opt(3);
-R_par_opt = p_opt(4);
-R_L       = p_opt(5);        % Optimized load resistor
+%% 4. Circuit Model & Objective Function
+% Full 7-parameter circuit vector: params_full = [R_1, R_2, L, C, R_par, P0, R_L]
+calc_transfer_func = @(f, params_full) params_full(7) ./ (params_full(1) + params_full(2) + params_full(7) + ...
+    params_full(1) * (params_full(2) + params_full(7)) ./ (params_full(5) + 1j*2*pi*f*params_full(3) + 1./(1j*2*pi*f*params_full(4))));
+
+% Map the active optimization variables to the full 7-parameter physical circuit vector.
+map_active_to_full = @(opt_vars) [R_1_fixed, R_2_fixed, opt_vars(1), calc_C(opt_vars(1)), opt_vars(2), opt_vars(3), R_L_fixed];
+
+weights     = 1 + 4 * exp(-((f_fit - f_res_exp) / 40e3).^2);
+residual_fn = @(opt_vars) 20 * log10(abs(calc_transfer_func(f_fit, map_active_to_full(opt_vars)))) + opt_vars(3) - dB_fit;
+
+%% 5. Solve Optimization
+if exist('lsqnonlin', 'file')
+    map_scaled_to_active = @(s_scaled) vars_lb + s_scaled .* (vars_ub - vars_lb);
+    opts = optimoptions('lsqnonlin', 'Display', 'off', 'FunctionTolerance', 1e-12, 'StepTolerance', 1e-12);
+    s_scaled_opt = lsqnonlin(@(s_scaled) weights .* residual_fn(map_scaled_to_active(s_scaled)), (vars_init - vars_lb) ./ (vars_ub - vars_lb), zeros(1,3), ones(1,3), opts);
+    vars_opt = map_scaled_to_active(s_scaled_opt);
+else
+    map_uncon_to_active = @(u_uncon) vars_lb + (vars_ub - vars_lb) ./ (1 + exp(-u_uncon));
+    opts = optimset('Display', 'notify', 'MaxFunEvals', 10000, 'MaxIter', 5000, 'TolX', 1e-12, 'TolFun', 1e-12);
+    u_uncon_opt = fminsearch(@(u_uncon) rms(weights .* residual_fn(map_uncon_to_active(u_uncon))), log((vars_init - vars_lb) ./ (vars_ub - vars_init)), opts);
+    vars_opt = map_uncon_to_active(u_uncon_opt);
+end
+
+%% 6. Unpack & Save Results (Backward Compatible)
+full_params_cell = num2cell(map_active_to_full(vars_opt));
+[R_1_opt, R_2_opt, L_opt, C_opt, R_par_opt, P0_final, R_L_opt] = deal(full_params_cell{:});
+[R0_opt, R_opt, R_L] = deal(R_1_opt, R_2_opt, R_L_opt);
+
 f_res_opt = 1 / (2 * pi * sqrt(L_opt * C_opt));
+rmse_opt  = rms(residual_fn(vars_opt));
+H_opt     = @(f) calc_transfer_func(f, [full_params_cell{:}]);
 
-% Analytical optimal baseline offset P0 [dBm]
-P0_final  = mean(dB_fit - 20*log10(abs(calc_H(f_fit, R_opt, L_opt, C_opt, R_par_opt, R_L))));
+save(mat_file, 'R_1_opt', 'R_2_opt', 'L_opt', 'C_opt', 'R_par_opt', 'P0_final', ...
+               'H_opt', 'freq_full', 'R_L_opt', 'R0_opt', 'R_opt', 'R_L', 'f_res_opt');
 
-%% 7. Construct Self-Contained Transfer Function Handle
-% Constructed using explicit numerical values so that it loads cleanly without external m-file dependency
-H_opt = @(f) (((1j*2*pi*f*L_opt + 1./(1j*2*pi*f*C_opt) + R_par_opt) * R_L) ./ ...
-    ((1j*2*pi*f*L_opt + 1./(1j*2*pi*f*C_opt) + R_par_opt) + R_L)) ./ ...
-    (R_opt + (((1j*2*pi*f*L_opt + 1./(1j*2*pi*f*C_opt) + R_par_opt) * R_L) ./ ...
-    ((1j*2*pi*f*L_opt + 1./(1j*2*pi*f*C_opt) + R_par_opt) + R_L)));
+%% 8. Verification Plot
+figure('Name', 'RLC Notch Filter Fit');
 
-%% 8. Save Optimized Results to MAT-file
-save(mat_file, 'R0_opt', 'R_opt', 'L_opt', 'C_opt', 'R_par_opt', 'P0_final', 'H_opt', 'freq_full', 'R_L', 'f_res_opt');
-fprintf('Successfully saved optimized parameters to:\n  %s\n\n', mat_file);
+hold on;
+patch([low_fit_bound, up_fit_bound, up_fit_bound, low_fit_bound], [-10, -10, 15, 15], [0.9 0.95 1.0], ...
+    'EdgeColor', 'none', 'DisplayName', 'Fit Range (200--800 kHz)');
+plot(freq_full, sa_dB, 'k-', 'LineWidth', 1.8, 'DisplayName', 'Experimental Data');
+plot(freq_full, 20 * log10(abs(H_opt(freq_full))) + P0_final, 'r--', 'LineWidth', 2.0, 'DisplayName', 'Fitted Model');
+xline(f_res_opt, 'b:', 'LineWidth', 1.5, 'DisplayName', sprintf('Resonance (%.2f kHz)', f_res_opt / 1e3));
 
-%% 9. Display Fit Summary
-fprintf('================ Optimization Summary ================\n');
-fprintf('  R_opt      = %8.4f Ohm      (nominal: %5.1f Ohm)\n', R_opt, R0);
-fprintf('  L_opt      = %8.4e H (%.2f uH, nominal: %5.1f uH)\n', L_opt, L_opt*1e6, L0*1e6);
-fprintf('  C_opt      = %8.4e F (%.2f pF, nominal: %5.1f pF)\n', C_opt, C_opt*1e12, C0*1e12);
-fprintf('  R_par_opt  = %8.4f Ohm      (max bound: %5.1f Ohm)\n', R_par_opt, R_par_max);
-fprintf('  R_L        = %8.4f Ohm      (nominal: %5.1f Ohm)\n', R_L, R_L0);
-fprintf('  f_res_opt  = %8.2f kHz\n', f_res_opt / 1e3);
-fprintf('  P0_final   = %8.4f dBm\n', P0_final);
-fit_rmse = norm((20*log10(abs(H_opt(f_fit))) + P0_final) - dB_fit) / sqrt(length(f_fit));
-fprintf('  Fit RMSE   = %8.4f dB   (over 200 kHz - 800 kHz)\n', fit_rmse);
-fprintf('======================================================\n');
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dBm]');
+xlim([0, 1e6]); ylim([-8, 10]);
+legend('Location', 'southeast'); grid on;
+if exist('PlotUtils', 'class'), PlotUtils.styleAxes(gca); end

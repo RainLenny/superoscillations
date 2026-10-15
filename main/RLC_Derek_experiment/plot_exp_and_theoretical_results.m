@@ -20,7 +20,18 @@ sa_V = 10.^(sa_dB / 20);
 %% Load theoretical notch filter response
 rlc_data = load(fullfile(fileparts(mfilename('fullpath')), 'optimized_RLC.mat'));
 theory_freq = rlc_data.freq_full;
-theory_dB = 20*log10(abs(rlc_data.H_opt(theory_freq))) + rlc_data.P0_final;
+
+% Circuit parameters from optimized model (matching circuit diagram)
+R_1   = rlc_data.R_1_opt;
+R_2   = rlc_data.R_2_opt;
+L     = rlc_data.L_opt;
+C     = rlc_data.C_opt;
+R_par = rlc_data.R_par_opt;
+R_L   = rlc_data.R_L_opt;
+P_0   = rlc_data.P0_final;
+H_opt = rlc_data.H_opt;
+
+theory_dB = 20*log10(abs(H_opt(theory_freq))) + P_0;
 theory_V = 10.^(theory_dB / 20);
 
 %% Setup variables for looping over notch data
@@ -67,10 +78,10 @@ for i = 1:length(files)
     
     % Apply theoretical filter to the SO signal
     f_SO = angular_freqs_SO / (2 * pi);
-    H_k = rlc_data.H_opt(f_SO);
+    H_k = H_opt(f_SO);
     H_k = reshape(H_k, size(f_SO));
     % shift for baseline gain:
-    H_k = H_k * 10^(rlc_data.P0_final / 20);
+    H_k = H_k * 10^(P_0 / 20);
     amps_filtered = amps_SO .* H_k;
     
     [SO_signal_filtered, ~, ~] = generate_signal_base(angular_freqs_SO, amps_filtered, false, false, false);
